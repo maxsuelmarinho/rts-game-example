@@ -1,4 +1,6 @@
 var singleplayer = {
+    currentLevel: 0,
+
     start: function() {
         $('.gamelayer').hide();
 
@@ -14,8 +16,6 @@ var singleplayer = {
         $('#gamestartscreen').show();
     },
 
-    currentLevel: 0,
-
     startCurrentLevel: function() {
         var level = maps.singleplayer[singleplayer.currentLevel];
 
@@ -24,15 +24,26 @@ var singleplayer = {
         game.currentMapImage = loader.loadImage(level.mapImage);
         game.currentLevel = level;
 
+        game.offsetX = level.startX * game.gridSize;
+        game.offsetY = level.startY * game.gridSize;
+
         if (loader.loaded) {
             $('#entermission').removeAttr('disabled');
         } else {
             loader.onload = function() {
-                $('entermission').removeAttr('disabled');
+                $('#entermission').removeAttr('disabled');
             }
         }
 
         $('#missionbriefing').html(level.briefing.replace(/\n/g, '<br>'));
         $('#missionscreen').show();
+    },
+
+    play: function() {
+        game.animationLoop();
+        
+        game.animationInterval = setInterval(game.animationLoop, game.animationTimeout);
+
+        game.start();
     },
 };
