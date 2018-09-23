@@ -45,7 +45,14 @@ var game = {
 
     // the animation loop will run at a fixed interval (100ms)
     animationLoop: function() {
+        for (var i = game.items.length - 1; i >= 0; i--) {
+            game.items[i].animate();
+        }
 
+        game.sortedItems = $.extend([], game.items);
+        game.sortedItems.sort(function(a, b) {
+            return b.y - a.y + ((b.y == a.y) ? (a.x - b.x) : 0);
+        });
     },
 
     // run as often as the browser allows
@@ -70,6 +77,11 @@ var game = {
             game.canvasWidth,
             game.canvasHeight
         );
+
+        // start drawing the foreground elements
+        for (var i = game.sortedItems.length - 1; i >= 0; i--) {
+            game.sortedItems[i].draw();
+        }
 
         // Draw the mouse
         mouse.draw();
@@ -114,4 +126,59 @@ var game = {
             mouse.calculateGameCoordinates();
         }
     },
+
+    resetArrays: function() {
+        game.counter = 1;
+        game.items = [];
+        game.sortedItems = [];
+        game.buildings = [];
+        game.vehicles = [];
+        game.aircraft = [];
+        game.terrain = [];
+        game.triggeredEvents = [];
+        game.selectedItems = [];
+        game.sortedItems = [];
+    },
+
+    add: function(itemDetails) {
+        if (!itemDetails.uid) {
+            itemDetails.uid = game.counter++;
+        }
+
+        var item = window[itemDetails.type].add(itemDetails);
+        game.items.push(item);
+        
+        // add the item to the type specific array
+        game[item.type].push(item);
+
+        return item;
+    },
+
+    remove: function(item) {
+        // unselect item if it is selected
+        item.selected = false;
+        for (var i = game.selectedItems.length - i; i >= 0; i--) {
+            if (game.selectedItems[i].uid == item.uid) {
+                game.selectedItems.splice(i, 1);
+                break;
+            }
+
+        }
+
+        // remove item from the items array
+        for (var i = game.items.length - 1; i >= 0; i--) {
+            if (game.items[i].uid == item.uid) {
+                game.items.splice(i, 1);
+                break;
+            }
+        }
+
+        // remove items from the type specific array
+        for (var i = game[item.type].length - 1; i >= 0; i--) {
+            if (game[item.type][i].uid == item.uid) {
+                game[item.type].splice(i, 1);
+                break;
+            }
+        }
+    }
 }
