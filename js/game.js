@@ -13,8 +13,13 @@ var game = {
 
     offsetY: 0,
 
+    panningThreshold: 60, // distance from canvas's edge at which panning starts
+
+    panningSpeed: 10,
+
     init: function() {
         loader.init();
+        mouse.init();
 
         $('.gamelayer').hide();
         $('#gamestartscreen').show();
@@ -45,6 +50,8 @@ var game = {
 
     // run as often as the browser allows
     drawingLoop: function() {
+        game.handlePanning();
+
         // Only redraw the background if it has change
         if (game.refreshBackground) {
             game.backgroundContext.drawImage(game.currentMapImage,
@@ -56,9 +63,55 @@ var game = {
             game.refreshBackground = false;
         }
 
+        // clear the foreground canvas
+        game.foregroundContext.clearRect(
+            0,
+            0,
+            game.canvasWidth,
+            game.canvasHeight
+        );
+
+        // Draw the mouse
+        mouse.draw();
+
         // call the drawing loop for the next frame using request animation frame
         if (game.running) {
             requestAnimationFrame(game.drawingLoop);
         }
-    }
+    },
+
+    handlePanning: function() {
+        if (!mouse.insideCanvas) {
+            return;
+        }
+
+        if (mouse.x <= game.panningThreshold) {
+            if (game.offsetX >= game.panningSpeed) {
+                game.refreshBackground = true;
+                game.offsetX -= game.panningSpeed;
+            }
+        } else if (mouse.x >= game.canvasWidth - game.panningThreshold) {
+            if (game.offsetX + game.canvasWidth + game.panningSpeed <= game.currentMapImage.width) {
+                game.refreshBackground = true;
+                game.offsetX += game.panningSpeed;
+            }
+        }
+
+        if (mouse.y <= game.panningThreshold) {
+            if (game.offsetY >= game.panningSpeed) {
+                game.refreshBackground = true;
+                game.offsetY -= game.panningSpeed;
+            }
+        } else if (mouse.y >= game.canvasHeight - game.panningThreshold) {
+            if (game.offsetY + game.canvasHeight + game.panningSpeed <= game.currentMapImage.height) {
+                game.refreshBackground = true;
+                game.offsetY += game.panningSpeed;
+            }
+        }
+
+        if (game.refreshBackground) {
+            // update mouse game coordinates based on game offsets
+            mouse.calculateGameCoordinates();
+        }
+    },
 }
