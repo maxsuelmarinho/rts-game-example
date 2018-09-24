@@ -27,6 +27,59 @@ var buildings = {
                 { name: "constructing", count: 3 },
             ],
         },
+
+        "starport": {
+            name: "starport",
+            pixelWidth: 40,
+            pixelHeight: 60,
+            baseWidth: 40,
+            baseHeight: 55,
+            pixelOffsetX: 1,
+            pixelOffsetY: 5,
+            buildableGrid: [
+                [1, 1],
+                [1, 1],
+                [1, 1]
+            ],
+            passableGrid: [
+                [1, 1],
+                [0, 0],
+                [0, 0],
+            ],
+            sight: 3,
+            cost: 2000,
+            hitPoints: 300,
+            spriteImages: [
+                {name: "teleport", count: 9},
+                { name: "closing", count: 18 },
+                { name: "healthy", count: 4 },
+                { name: "damaged", count: 1 },
+            ],
+        },
+
+        "harvester": {
+            name: "harvester",
+            pixelWidth: 40,
+            pixelHeight: 60,
+            baseWidth: 40,
+            baseHeight: 20,
+            pixelOffsetX: -2,
+            pixelOffsetY: 40,
+            buildableGrid: [
+                [1, 1]
+            ],
+            passableGrid: [
+                [1, 1]
+            ],
+            sight: 3,
+            cost: 5000,
+            hitPoints: 300,
+            spriteImages: [
+                { name: "deploy", count: 17 },
+                { name: "healthy", count: 3 },
+                { name: "damaged", count: 1 },
+            ],
+        }
     },
 
     defaults: {
@@ -62,6 +115,51 @@ var buildings = {
                     this.imageList = this.spriteArray["constructing"];
                     this.imageOffset = this.imageList.offset + this.animationIndex;
                     this.animationIndex++;
+                    if (this.animationIndex >= this.imageList.count) {
+                        this.animationIndex = 0;
+                        this.action = "stand";
+                    }
+                    break;
+                case "teleport":
+                    this.imageList = this.spriteArray["teleport"];
+                    this.imageOffset = this.imageList.offset + this.animationIndex;
+                    this.animationIndex++;
+                    // once teleporting is complete, move to either guard or stand mode
+                    if (this.animationIndex >= this.imageList.count) {
+                        this.animationIndex = 0;
+                        if (this.canAttack) {
+                            this.action = "guard";
+                        } else {
+                            this.action = "stand";
+                        }
+                    }
+                    break;
+                case "close":
+                    this.imageList = this.spriteArray["closing"];
+                    this.imageOffset = this.imageList.offset + this.animationIndex;
+                    this.animationIndex++;
+                    // onde closing is complete go back to standing
+                    if (this.animationIndex >= this.imageList.count) {
+                        this.animationIndex = 0;
+                        this.action = "stand";
+                    }
+                    break;
+                case "open":
+                    this.imageList = this.spriteArray["closing"];
+                    // opening is just the closing sprites running backwards
+                    this.imageOffset = this.imageList.offset + this.imageList.count - this.animationIndex;
+                    this.animationIndex++;
+                    // once opening is complete, go back to close
+                    if (this.animationIndex >= this.imageList.count) {
+                        this.animationIndex = 0;
+                        this.action = "close";
+                    }
+                    break;
+                case "deploy":
+                    this.imageList = this.spriteArray["deploy"];
+                    this.imageOffset = this.imageList.offset + this.animationIndex;
+                    this.animationIndex++;
+                    // once deploying is complete, go back to stand
                     if (this.animationIndex >= this.imageList.count) {
                         this.animationIndex = 0;
                         this.action = "stand";

@@ -91,6 +91,7 @@ var loader = {
 };
 
 function loadItem(name) {
+    console.log("loadItem", name);
     var item = this.list[name];
 
     if (item.spriteArray) {
