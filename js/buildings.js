@@ -79,6 +79,38 @@ var buildings = {
                 { name: "healthy", count: 3 },
                 { name: "damaged", count: 1 },
             ],
+        },
+
+        "ground-turret": {
+            name: "ground-turret",
+            pixelWidth: 38,
+            pixelHeight: 32,
+            baseWidth: 20,
+            baseHeight: 18,
+            pixelOffsetX: 9,
+            pixelOffsetY: 12,
+            buildableGrid: [
+                [1]
+            ],
+            passableGrid: [
+                [1]
+            ],
+            sight: 5,
+            cost: 1500,
+            hitPoints: 200,
+            spriteImages: [
+                { name: "teleport", count: 9 },
+                { name: "healthy", count: 1, directions: 8 },
+                { name: "damaged", count: 1 },
+            ],
+            canAttack: true,
+            canAttackLand: true,
+            canAttackAir: false,
+            weaponType: "cannon-ball",
+            action: "guard",
+            direction: 0, // 0: face upward
+            directions: 8, // total of 8 turret directions allowed (0-7)
+            orders: { type: "guard" }
         }
     },
 
@@ -164,6 +196,14 @@ var buildings = {
                         this.animationIndex = 0;
                         this.action = "stand";
                     }
+                    break;
+                case "guard":
+                    if (this.lifeCode == "damaged") {
+                        this.imageList = this.spriteArray[this.lifeCode];
+                    } else {
+                        this.imageList = this.spriteArray[this.lifeCode + "-" + this.direction];
+                    }
+                    this.imageOffset = this.imageList.offset;
                     break;
             }
         },

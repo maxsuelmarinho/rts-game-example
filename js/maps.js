@@ -8,7 +8,7 @@ var maps = {
             "startY": 4,
 
             "requirements": {
-                "buildings": ["base", "starport", "harvester"],
+                "buildings": ["base", "starport", "harvester", "ground-turret"],
                 "vehicles": [],
                 "aircraft": [],
                 "terrain": [],
@@ -76,6 +76,31 @@ var maps = {
                     "y": 12,
                     "team": "green",
                     "action": "deploy"
+                },
+
+                {
+                    "type": "buildings",
+                    "name": "ground-turret",
+                    "x": 14,
+                    "y": 9,
+                    "team": "blue",
+                    "direction": 3
+                },
+                {
+                    "type": "buildings",
+                    "name": "ground-turret",
+                    "x": 14,
+                    "y": 12,
+                    "team": "green",
+                    "direction": 1
+                },
+                {
+                    "type": "buildings",
+                    "name": "ground-turret",
+                    "x": 16,
+                    "y": 10,
+                    "team": "blue",
+                    "action": "teleport"
                 },
                 
             ]
