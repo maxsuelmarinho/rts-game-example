@@ -10,11 +10,12 @@ var maps = {
             "requirements": {
                 "buildings": ["base", "starport", "harvester", "ground-turret"],
                 "vehicles": ["transport", "harvester", "scout-tank", "heavy-tank"],
-                "aircraft": [],
+                "aircraft": ["chopper", "wraith"],
                 "terrain": [],
             },
 
             "items": [
+                // buildings
                 {
                     "type": "buildings",
                     "name": "base",
@@ -103,6 +104,7 @@ var maps = {
                     "action": "teleport"
                 },
 
+                // vehicles
                 {
                     "type": "vehicles",
                     "name": "transport",
@@ -166,6 +168,24 @@ var maps = {
                     "y": 16,
                     "team": "green",
                     "direction": 0
+                },
+
+                // aircrafts
+                {
+                    "type": "aircraft",
+                    "name": "chopper",
+                    "x": 20,
+                    "y": 22,
+                    "team": "blue",
+                    "direction": 5
+                },
+                {
+                    "type": "aircraft",
+                    "name": "wraith",
+                    "x": 23,
+                    "y": 22,
+                    "team": "green",
+                    "direction": 3
                 },
             ]
         },
