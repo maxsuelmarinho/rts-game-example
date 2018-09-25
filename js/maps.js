@@ -9,7 +9,7 @@ var maps = {
 
             "requirements": {
                 "buildings": ["base", "starport", "harvester", "ground-turret"],
-                "vehicles": [],
+                "vehicles": ["transport", "harvester", "scout-tank", "heavy-tank"],
                 "aircraft": [],
                 "terrain": [],
             },
@@ -102,7 +102,71 @@ var maps = {
                     "team": "blue",
                     "action": "teleport"
                 },
-                
+
+                {
+                    "type": "vehicles",
+                    "name": "transport",
+                    "x": 26,
+                    "y": 10,
+                    "team": "blue",
+                    "direction": 2
+                },
+                {
+                    "type": "vehicles",
+                    "name": "harvester",
+                    "x": 26,
+                    "y": 12,
+                    "team": "blue",
+                    "direction": 3
+                },
+                {
+                    "type": "vehicles",
+                    "name": "scout-tank",
+                    "x": 26,
+                    "y": 14,
+                    "team": "blue",
+                    "direction": 4
+                },
+                {
+                    "type": "vehicles",
+                    "name": "heavy-tank",
+                    "x": 26,
+                    "y": 16,
+                    "team": "blue",
+                    "direction": 5
+                },
+                {
+                    "type": "vehicles",
+                    "name": "transport",
+                    "x": 28,
+                    "y": 10,
+                    "team": "green",
+                    "direction": 7
+                },
+                {
+                    "type": "vehicles",
+                    "name": "harvester",
+                    "x": 28,
+                    "y": 12,
+                    "team": "green",
+                    "direction": 6
+                },
+                {
+                    "type": "vehicles",
+                    "name": "scout-tank",
+                    "x": 28,
+                    "y": 14,
+                    "team": "green",
+                    "direction": 1
+                },
+                {
+                    "type": "vehicles",
+                    "name": "heavy-tank",
+                    "x": 28,
+                    "y": 16,
+                    "team": "green",
+                    "direction": 0
+                },
             ]
         },
     ]
