@@ -11,7 +11,7 @@ var maps = {
                 "buildings": ["base", "starport", "harvester", "ground-turret"],
                 "vehicles": ["transport", "harvester", "scout-tank", "heavy-tank"],
                 "aircraft": ["chopper", "wraith"],
-                "terrain": [],
+                "terrain": ["oilfield", "bigrocks", "smallrocks"],
             },
 
             "items": [
@@ -187,6 +187,33 @@ var maps = {
                     "team": "green",
                     "direction": 3
                 },
+
+                // terrain
+                {
+                    "type": "terrain",
+                    "name": "oilfield",
+                    "x": 5,
+                    "y": 7
+                },
+                {
+                    "type": "terrain",
+                    "name": "oilfield",
+                    "x": 8,
+                    "y": 7,
+                    "action": "hint"
+                },
+                {
+                    "type": "terrain",
+                    "name": "bigrocks",
+                    "x": 5,
+                    "y": 3
+                },
+                {
+                    "type": "terrain",
+                    "name": "smallrocks",
+                    "x": 8,
+                    "y": 3
+                }
             ]
         },
     ]
