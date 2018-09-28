@@ -142,7 +142,9 @@ var vehicles = {
             game.foregroundContext.fillStyle = (this.lifeCode == "healthy") ?
                 game.healthBarHealthyFillColor : game.healthBarDamagedFillColor;
 
-            game.foregroundContext.fillRect(x, y, this.baseWidth * this.life / this.hitPoints, game.lifeBarHeight);
+            game.foregroundContext.fillRect(
+                x, y, 
+                this.pixelWidth * this.life / this.hitPoints, game.lifeBarHeight);
             game.foregroundContext.strokeStyle = game.healthBarBorderColor;
             game.foregroundContext.lineWidth = 1;
             game.foregroundContext.strokeRect(x, y, this.baseWidth, game.lifeBarHeight);

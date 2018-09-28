@@ -168,8 +168,9 @@ var mouse = {
                     return item;
                 }
             } else {
-                if (item.lifeCode != "dead" && Math.pow(item.x - mouse.gameX / game.gridSize, 2) +
-                    Math.pow(item.y - mouse.gameY / game.gridSize, 2) < Math.pow(item.radius) / game.gridSize, 2) {
+                if (item.lifeCode != "dead" && 
+                    Math.pow(item.x - mouse.gameX / game.gridSize, 2) +
+                    Math.pow(item.y - mouse.gameY / game.gridSize, 2) < Math.pow(item.radius / game.gridSize, 2)) {
                     
                     return item;
                 }
