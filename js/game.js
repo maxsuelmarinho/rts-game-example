@@ -17,6 +17,18 @@ var game = {
 
     panningSpeed: 10,
 
+    selectionBorderColor: "rgb(255, 255, 0, 0.5)",
+
+    selectionFillColor: "rgb(255, 215, 0, 0.2)",
+
+    healthBarBorderColor: "rgb(0, 0, 0, 0.8)",
+
+    healthBarHealthyFillColor: "rgb(0, 255, 0, 0.5)",
+
+    healthBarDamagedFillColor: "rgb(255, 0, 0, 0.5)",
+
+    lifeBarHeight: 5,
+
     init: function() {
         loader.init();
         mouse.init();
@@ -179,6 +191,33 @@ var game = {
                 game[item.type].splice(i, 1);
                 break;
             }
+        }
+    },
+
+    clearSelection: function() {
+        while(game.selectedItems.length > 0) {
+            // removes the item from the array
+            game.selectedItems.pop().selected = false;
+        }
+    },
+
+    selectItem: function(item, shiftPressed) {
+        // Presing shift and clicking on a selected item will deselect it
+        if (shiftPressed && item.selected) {
+            item.selected = false;
+            for (var i = game.selectedItems.length - 1; i >= 0; i--) {
+                if (game.selectedItems[i].uid == item.uid) {
+                    game.selectedItems.splice(i, 1);
+                    break;
+                }
+            }
+
+            return;
+        }
+
+        if (item.selectable && !item.selected) {
+            item.selected = true;
+            game.selectedItems.push(item);
         }
     }
 }

@@ -42,7 +42,7 @@ var vehicles = {
             pixelOffsetY: 10,
             radius: 11,
             speed: 20,
-            sight: 4,
+            sight: 3,
             cost: 500,
             hitPoints: 50,
             turnSpeed: 4,
@@ -63,7 +63,7 @@ var vehicles = {
             pixelOffsetY: 15,
             radius: 13,
             speed: 15,
-            sight: 5,
+            sight: 4,
             cost: 1200,
             hitPoints: 50,
             turnSpeed: 4,
@@ -113,6 +113,15 @@ var vehicles = {
         draw: function() {
             var x = (this.x * game.gridSize) - game.offsetX - this.pixelOffsetX;
             var y = (this.y * game.gridSize) - game.offsetY - this.pixelOffsetY;
+
+            this.drawingX = x;
+            this.drawingY = y;
+
+            if (this.selected) {
+                this.drawSelection();
+                this.drawLifeBar();
+            }
+
             var colorIndex = (this.team == "blue") ? 0 : 1;
             var colorOffset = colorIndex * this.pixelHeight;
 
@@ -124,6 +133,32 @@ var vehicles = {
                 x, y,
                 this.pixelWidth, this.pixelHeight
             );
+        },
+
+        drawLifeBar: function () {
+            var x = this.drawingX;
+            var y = this.drawingY - 2 * game.lifeBarHeight;
+
+            game.foregroundContext.fillStyle = (this.lifeCode == "healthy") ?
+                game.healthBarHealthyFillColor : game.healthBarDamagedFillColor;
+
+            game.foregroundContext.fillRect(x, y, this.baseWidth * this.life / this.hitPoints, game.lifeBarHeight);
+            game.foregroundContext.strokeStyle = game.healthBarBorderColor;
+            game.foregroundContext.lineWidth = 1;
+            game.foregroundContext.strokeRect(x, y, this.baseWidth, game.lifeBarHeight);
+        },
+
+        drawSelection: function () {
+            var x = this.drawingX + this.pixelOffsetX;
+            var y = this.drawingY + this.pixelOffsetY;
+
+            game.foregroundContext.strokeStyle = game.selectionBorderColor;
+            game.foregroundContext.lineWidth = 1;
+            game.foregroundContext.beginPath();
+            game.foregroundContext.arc(x, y, this.radius, 0, Math.PI * 2, false);
+            game.foregroundContext.fillStyle = game.selectionFillColor;
+            game.foregroundContext.fill();
+            game.foregroundContext.stroke();
         },
     },
 
