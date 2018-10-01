@@ -29,8 +29,75 @@ var mouse = {
                 game.selectItem(clickedItem, shiftPressed);
             }
         } else { // Right Click
+            var uids = [];
+            if (clickedItem) {
+                console.log("clicked item:", clickedItem.name);
+                if (clickedItem.type != "terrain") {
+                    if (clickedItem.team != game.team) { // player right-clicked on enemy item
+                        uids = this.filterSelectedItems(this.canAttack);    
 
+                        if (uids.length > 0) {
+                            console.log("selected items:", uids.length);
+                            console.log("Sending attack command");
+                            game.sendCommand(uids, { type: "attack", toUid: clickedItem.uid });
+                        }
+                    } else { // player right-clicked on a friendly item
+                        uids = this.filterSelectedItems(this.isFriendlyItem);    
+
+                        if (uids.length > 0) {
+                            console.log("selected items:", uids.length);
+                            console.log("Sending guard command");
+                            game.sendCommand(uids, { type: "guard", toUid: clickedItem.uid });
+                        }
+                    }
+                } else if (clickedItem.name == "oilfield") {
+                    // identify the first selected harvester from players team (since only one can be deploy at a time)
+                    uids = this.filterSelectedItems(this.isHarvesterVehicle);
+
+                    if (uids.length > 0) {
+                        console.log("selected items:", uids.length);
+                        console.log("Sending deploy command");
+                        game.sendCommand(uids, { type: "deploy", toUid: clickedItem.uid });
+                    }
+                }
+            } else { // player clicked on the ground
+                uids = this.filterSelectedItems(this.itemCanMove);
+
+                if (uids.length > 0) {
+                    console.log("selected items:", uids.length);
+                    console.log("Sending move command");
+                    game.sendCommand(uids, { type: "move", to: { x: mouse.gameX / game.gridSize, y: mouse.gameY / game.gridSize } });
+                }
+            }
         }
+    },
+
+    filterSelectedItems: function(predicate) {
+        var uids = [];
+        for (var i = game.selectedItems.length - 1; i >= 0; i--) {
+            var item = game.selectedItems[i];
+            if (predicate(item)) {
+                uids.push(item.uid);
+            }
+        }
+
+        return uids;
+    },
+
+    itemCanMove: function(item) {
+        return item.team == game.team && (item.type == "vehicles" || item.type == "aircraft");
+    },
+
+    isHarvesterVehicle: function(item) {
+        return item.team == game.team && (item.type == "vehicles" || item.name == "harvester");
+    },
+
+    isFriendlyItem: function(item) {
+        return item.team == game.team && (item.type == "vehicles" || item.type == "aircraft");
+    },
+
+    canAttack: function(item) {
+        return item.team == game.team && item.canAttack;
     },
 
     draw: function() {

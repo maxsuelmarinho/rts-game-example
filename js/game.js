@@ -57,6 +57,14 @@ var game = {
 
     // the animation loop will run at a fixed interval (100ms)
     animationLoop: function() {
+
+        // process orders for any item that handles it
+        for (var i = game.items.length - 1; i >= 0; i--) {
+            if (game.items[i].processOrders) {
+                game.items[i].processOrders();
+            }
+        }
+
         for (var i = game.items.length - 1; i >= 0; i--) {
             game.items[i].animate();
         }
@@ -218,6 +226,44 @@ var game = {
         if (item.selectable && !item.selected) {
             item.selected = true;
             game.selectedItems.push(item);
+        }
+    },
+
+    sendCommand: function(uids, details) {
+        if (game.type == "singleplayer") {
+            singleplayer.sendCommand(uids, details);
+        } else {
+            multiplayer.sendCommand(uids, details);
+        }
+    },
+
+    getItemByUid: function(uid) {
+        for (var i = game.items.length - 1; i >= 0; i--) {
+            if (game.items[i].uid == uid) {
+                return game.items[i];
+            }
+        }
+    },
+
+    processCommand: function(uids, details) {
+        var toObject;
+        if (details.toUid) {
+            toObject = game.getItemByUid(details.toUid);
+            if (!toObject || toObject.lifeCode == "dead") {
+                // object no longer exists. Invalid command
+                return;
+            }
+        }
+
+        for (var i in uids) {
+            var uid = uids[i];
+            var item = game.getItemByUid(uid);
+            if (item) {
+                item.orders = $.extend([], details);
+                if (toObject) {
+                    item.orders.to = toObject;
+                }
+            }
         }
     }
 }
