@@ -8,12 +8,12 @@ var aircraft = {
             pixelOffsetY: 20,
             radius: 18,
             speed: 25,
-            sight: 6,
+            sight: 4,
             cost: 900,
             hitPoints: 50,
             turnSpeed: 4,
             spriteImages: [
-                { name: "fly", count: 1, directions: 8 }
+                { name: "fly", count: 4, directions: 8 }
             ],
             weaponType: "heatseeker",
             canAttack: true,
@@ -44,7 +44,7 @@ var aircraft = {
         },
     },
 
-    "defaults": {
+    defaults: {
         type: "aircraft",
         animationIndex: 0,
         direction: 0,
@@ -67,7 +67,7 @@ var aircraft = {
 
             switch (this.action) {
                 case "fly":
-                    var direction = this.direction;
+                    var direction = wrapDirection(Math.round(this.direction), this.directions);
                     this.imageList = this.spriteArray["fly-" + direction];
                     this.imageOffset = this.imageList.offset + this.animationIndex;
                     this.animationIndex++;
@@ -156,6 +156,50 @@ var aircraft = {
             game.foregroundContext.lineTo(x, y + this.pixelShadowHeight);
             game.foregroundContext.stroke();
         },
+
+        processOrders: function() {
+            this.lastMovementX = 0;
+            this.lastMovementY = 0;
+            switch (this.orders.type) {
+                case "move":
+                    // move towards destination until distance from destination
+                    // is less than aircraft radius
+                    var distanceFromDestinationSquared = 
+                        Math.pow(this.orders.to.x - this.x, 2) + Math.pow(this.orders.to.y - this.y, 2);
+
+                    if (distanceFromDestinationSquared < Math.pow(this.radius / game.gridSize, 2)) {
+                        this.orders = { type: "float" };
+                    } else {
+                        this.moveTo(this.orders.to);
+                    }
+                    break;
+            }
+        },
+
+        moveTo: function(destination) {
+            // find out where we need to turn to get to destination
+            var newDirection = findAngle(destination, this, this.directions); // [0-7]
+
+            // calculate difference between new direction and current direction
+            var difference = angleDiff(this.direction, newDirection, this.directions); // [-4,4]
+
+            // calculate amount that aircraft can turn per animation cycle
+            var turnAmount = this.turnSpeed * game.turnSpeedAdjustmentFactor;
+            if (Math.abs(difference) > turnAmount) {
+                this.direction = 
+                    wrapDirection(this.direction + turnAmount * Math.abs(difference) / difference, this.directions);
+            } else {
+                // calculate distance that aircraft can move per animation cycle
+                var movement = this.speed * game.speedAdjustmentFactor;
+
+                // calculate x and y components of the movement
+                var angleRadians = -(Math.round(this.direction) / this.directions) * 2 * Math.PI;
+                this.lastMovementX = -(movement * Math.sin(angleRadians));
+                this.lastMovementY = -(movement * Math.cos(angleRadians));
+                this.x = this.x + this.lastMovementX;
+                this.y = this.y + this.lastMovementY;
+            }
+        }
     },
 
     load: loadItem,

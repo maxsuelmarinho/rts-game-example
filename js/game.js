@@ -29,6 +29,10 @@ var game = {
 
     lifeBarHeight: 5,
 
+    speedAdjustmentFactor: 1 / 64,
+
+    turnSpeedAdjustmentFactor: 1 / 8,
+
     init: function() {
         loader.init();
         mouse.init();
