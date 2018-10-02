@@ -110,6 +110,21 @@ var game = {
         // Draw the mouse
         mouse.draw();
 
+        // draw obstructed squares
+        for (var y = 0; y < game.currentMapTerrainGrid.length; y++) {
+            for (var x = 0; x < game.currentMapTerrainGrid[y].length; x++) {
+                var obstruction = game.currentMapTerrainGrid[y][x];
+                if (obstruction == 1) {
+                    game.foregroundContext.fillStyle = "rgb(255, 0, 0, 0.3)";
+
+                    game.foregroundContext.fillRect(
+                        (x * game.gridSize) - game.offsetX,
+                        (y * game.gridSize) - game.offsetY,
+                        game.gridSize, game.gridSize);
+                }
+            }
+        }
+
         // call the drawing loop for the next frame using request animation frame
         if (game.running) {
             requestAnimationFrame(game.drawingLoop);
