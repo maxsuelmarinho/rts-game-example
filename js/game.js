@@ -110,10 +110,22 @@ var game = {
         // Draw the mouse
         mouse.draw();
 
-        // draw obstructed squares
-        for (var y = 0; y < game.currentMapTerrainGrid.length; y++) {
-            for (var x = 0; x < game.currentMapTerrainGrid[y].length; x++) {
-                var obstruction = game.currentMapTerrainGrid[y][x];
+        game.drawObstructedSquares();
+
+        // call the drawing loop for the next frame using request animation frame
+        if (game.running) {
+            requestAnimationFrame(game.drawingLoop);
+        }
+    },
+
+    drawObstructedSquares: function() {
+        if (!game.currentMapPassableGrid) {
+            return;
+        }
+        
+        for (var y = 0; y < game.currentMapPassableGrid.length; y++) {
+            for (var x = 0; x < game.currentMapPassableGrid[y].length; x++) {
+                var obstruction = game.currentMapPassableGrid[y][x];
                 if (obstruction == 1) {
                     game.foregroundContext.fillStyle = "rgb(255, 0, 0, 0.3)";
 
@@ -123,11 +135,6 @@ var game = {
                         game.gridSize, game.gridSize);
                 }
             }
-        }
-
-        // call the drawing loop for the next frame using request animation frame
-        if (game.running) {
-            requestAnimationFrame(game.drawingLoop);
         }
     },
 
@@ -190,6 +197,10 @@ var game = {
         // add the item to the type specific array
         game[item.type].push(item);
 
+        if (item.type == "buildings" || item.type == "terrain") {
+            game.currentMapPassableGrid = undefined;
+        }
+
         return item;
     },
 
@@ -218,6 +229,10 @@ var game = {
                 game[item.type].splice(i, 1);
                 break;
             }
+        }
+
+        if (item.type == "buildins" || item.type == "terrain") {
+            game.currentMapPassableGrid = undefined;
         }
     },
 
@@ -284,5 +299,21 @@ var game = {
                 }
             }
         }
-    }
+    },
+
+    rebuildPassableGrid: function() {
+        game.currentMapPassableGrid = $.extend(true, [], game.currentMapTerrainGrid);
+        for (var i = game.items.length - 1; i >= 0; i--) {
+            var item = game.items[i];
+            if (item.type == "buildings" || item.type == "terrain") {
+                for (var y = item.passableGrid.length - 1; y >= 0; y--) {
+                    for (var x = item.passableGrid[y].length - 1; x >= 0; x--) {
+                        if (item.passableGrid[y][x]) {
+                            game.currentMapPassableGrid[item.y + y][item.x + x] = 1;
+                        }
+                    }
+                }
+            }
+        }
+    },
 }
