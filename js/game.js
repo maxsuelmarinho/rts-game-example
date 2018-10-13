@@ -3,6 +3,8 @@ $(window).load(function() {
 });
 
 var game = {
+    debug: false,
+
     gridSize: 20,
 
     backgroundChanged: true,
@@ -110,7 +112,9 @@ var game = {
         // Draw the mouse
         mouse.draw();
 
-        game.drawObstructedSquares();
+        if (game.debug) {
+            game.drawObstructedSquares();
+        }
 
         // call the drawing loop for the next frame using request animation frame
         if (game.running) {

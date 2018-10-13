@@ -122,6 +122,10 @@ var vehicles = {
                 this.drawLifeBar();
             }
 
+            if (game.debug) {
+                this.drawMovePath();
+            }
+
             var colorIndex = (this.team == "blue") ? 0 : 1;
             var colorOffset = colorIndex * this.pixelHeight;
 
@@ -163,6 +167,23 @@ var vehicles = {
             game.foregroundContext.stroke();
         },
 
+        drawMovePath: function () {
+            if (this.orders.path) {
+                for (var i = 0; i < this.orders.path.length; i++) {
+                    console.log("Drawing path", this.orders.path[i]);
+                    var x = ((this.orders.path[i].x * game.gridSize) - game.offsetX) + game.gridSize * 0.5;
+                    var y = ((this.orders.path[i].y * game.gridSize) - game.offsetY) + game.gridSize * 0.5;
+
+                    game.foregroundContext.strokeStyle = game.selectionBorderColor;
+                    game.foregroundContext.beginPath();
+                    game.foregroundContext.arc(x, y, 4, 0, Math.PI * 2, false);
+                    game.foregroundContext.fillStyle = game.selectionFillColor;
+                    game.foregroundContext.fill();
+                    game.foregroundContext.stroke();
+                }
+            }
+        },
+
         processOrders: function() {
             this.lastMovementX = 0;
             this.lastMovementY = 0;
@@ -170,10 +191,11 @@ var vehicles = {
                 case "move":
                     // move towards destination until distance from destination
                     // is less than vehicle radius
-                    var distanceFromDestinationSquared = 
-                        (Math.pow(this.orders.to.x - this.x, 2) + Math.pow(this.orders.to.y - this.x, 2));
+                    var distanceFromDestinationSquared =
+                        Math.pow(this.orders.to.x - this.x, 2) + Math.pow(this.orders.to.y - this.y, 2);
                     if (distanceFromDestinationSquared < Math.pow(this.radius / game.gridSize, 2)) {
                         this.orders = { type: "stand" };
+                        console.log("Vehicle stand:", "Stop when within one radius of the destination");
                         return;
                     } else {
                         // try to move to the destination
@@ -181,6 +203,7 @@ var vehicles = {
                         if (!moving) {
                             // pathfinding couldn't find a path so stop
                             this.orders = { type: "stand" };
+                            console.log("Vehicle stand:", "pathfinding couldn't find a path so stop");
                             return;
                         }
                     }
@@ -213,15 +236,18 @@ var vehicles = {
             } else {
                 // use A* algorithm to try and find a path to the destination
                 this.orders.path = AStar(grid, start, end, 'Euclidean');
+                console.log("Vehicle:", "{ path:", this.orders.path.length, " }", this.orders.path);
                 if (this.orders.path.length > 1) {
                     var nextStep = { x: this.orders.path[1].x + 0.5, y: this.orders.path[1].y + 0.5 };
                     newDirection = findAngle(nextStep, this, this.directions);
                 } else if (start[0] == end[0] && start[1] == end[1]) {
                     // reached destination grid
+                    console.log("Vehicle", "Reached destination grid");
                     this.orders.path = [this, destination];
                     newDirection = findAngle(destination, this, this.directions);
                 } else {
                     // there is no path
+                    console.log("Vehicle", "There is no path");
                     return false;
                 }
             }
