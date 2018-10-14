@@ -184,6 +184,8 @@ var vehicles = {
             }
         },
 
+        // Steering Behaviors for Autonomous Characters:
+        // http://www.red3d.com/cwr/steer/
         processOrders: function() {
             this.lastMovementX = 0;
             this.lastMovementY = 0;
@@ -197,7 +199,28 @@ var vehicles = {
                         this.orders = { type: "stand" };
                         console.log("Vehicle stand:", "Stop when within one radius of the destination");
                         return;
+                    } else if (distanceFromDestinationSquared < Math.pow(this.radius * 3 / game.gridSize, 2)) {
+                        // Stop when within 3 radius of the destination if colliding with something
+                        this.orders = { type: "stand" };
+                        return;
                     } else {
+                        if (this.colliding && 
+                            (distanceFromDestinationSquared < Math.pow(this.radius * 5 / game.gridSize, 2))) {
+                            
+                            // count collisions within 5 radius distance of goal
+                            if (!this.orders.collisionCount) {
+                                this.orders.collisionCount = 1;
+                            } else {
+                                this.orders.collisionCount++;
+                            }
+
+                            // stop if more than 30 collisions occur
+                            if (this.orders.collisionCount > 30) {
+                                this.orders = { type: "stand" };
+                                return;
+                            }
+                        }
+
                         // try to move to the destination
                         var moving = this.moveTo(this.orders.to);
                         if (!moving) {
@@ -252,25 +275,174 @@ var vehicles = {
                 }
             }
 
+            // check if moving along current direction might cause collision
+            // if so, change newDirection
+            var collisionObjects = this.checkCollisionObjects(grid);
+            this.hardCollision = false;
+            this.colliding = false;
+            if (collisionObjects.length > 0) {
+                this.colliding = true;
+
+                // create a force vector object that adds up 
+                // repulsion from all colliding objects
+                var forceVector = { x: 0, y: 0 };
+
+                // by default, the next step has a mild attraction force
+                collisionObjects.push({
+                    collisionType: "attraction",
+                    with: {
+                        x: this.orders.path[1].x + 0.5,
+                        y: this.orders.path[1].y + 0.5
+                    }
+                });
+
+                for (var i = collisionObjects.length - 1; i >= 0; i--) {
+                    var collisionObject = collisionObjects[i];
+                    var objectAngle = findAngle(collisionObject.with, this, this.directions);
+                    var objectAngleRadians = -(objectAngle / this.directions) * 2 * Math.PI;
+                    var forceMagnitude;
+                    switch(collisionObject.collisionType) {
+                        case "hard":
+                            forceMagnitude = 2;
+                            this.hardCollision = true;
+                            break;
+                        case "soft":
+                            forceMagnitude = 1;
+                            break;
+                        case "attraction":
+                            forceMagnitude = -0.25;
+                            break;
+                    }
+
+                    forceVector.x += (forceMagnitude * Math.sin(objectAngleRadians));
+                    forceVector.y += (forceMagnitude * Math.cos(objectAngleRadians));
+                }
+
+                // find a new direction based on the force vector
+                newDirection = findAngle(forceVector, { x: 0, y: 0 }, this.directions);
+            }
+
             // calculate turn amount for new direction
             var difference = angleDiff(this.direction, newDirection, this.directions);
             var turnAmount = this.turnSpeed * game.turnSpeedAdjustmentFactor;
 
-            // move forward, but keep turning as needed
-            var movement = this.speed * game.speedAdjustmentFactor;
-            var angleRadians = -(Math.round(this.direction) / this.directions) * 2 * Math.PI;
-            this.lastMovementX = -(movement * Math.sin(angleRadians));
-            this.lastMovementY = -(movement * Math.cos(angleRadians));
-            this.x = (this.x + this.lastMovementX);
-            this.y = (this.y + this.lastMovementY);
+            // either turn or move forward based on collision type
+            if (this.hardCollision) {
+                // in case of hard collision, do not move forward, just turn towards new direction
+                if (Math.abs(difference) > turnAmount) {
+                    this.direction = wrapDirection(
+                        this.direction + turnAmount * Math.abs(difference) / difference, this.directions);
+                }
+            } else {
+                // Otherwise, move forward, but keep turning as needed
+                var movement = this.speed * game.speedAdjustmentFactor;
+                var angleRadians = -(Math.round(this.direction) / this.directions) * 2 * Math.PI;
+                this.lastMovementX = -(movement * Math.sin(angleRadians));
+                this.lastMovementY = -(movement * Math.cos(angleRadians));
+                this.x = (this.x + this.lastMovementX);
+                this.y = (this.y + this.lastMovementY);
 
-            if (Math.abs(difference) > turnAmount) {
-                this.direction = wrapDirection(
-                    this.direction + turnAmount * Math.abs(difference) / difference, 
-                    this.directions);
+                if (Math.abs(difference) > turnAmount) {
+                    this.direction = wrapDirection(
+                        this.direction + turnAmount * Math.abs(difference) / difference, 
+                        this.directions);
+                }
             }
 
             return true;
+        },
+
+        // Make a list of collisions that the vehicle will have if it goes along the present path
+        checkCollisionObjects: function(grid) {
+            // Calculate new position on present path
+            var movement = this.speed * game.speedAdjustmentFactor;
+            var angleRadians = -(Math.round(this.direction) / this.directions) * 2 * Math.PI;
+            var newX = this.x - (movement * Math.sin(angleRadians));
+            var newY = this.y - (movement * Math.cos(angleRadians));
+
+            // List of objects that will collide after next movement step
+            var collisionObjects = [];
+            var x1 = Math.max(0, Math.floor(newX) - 3);
+            var x2 = Math.min(game.currentLevel.mapGridWidth - 1, Math.floor(newX) + 3);
+            var y1 = Math.max(0, Math.floor(newY) - 3);
+            var y2 = Math.min(game.currentLevel.mapGridHeight - 1, Math.floor(newY) + 3);
+
+            // Test grid upto 3 squares away
+            for (var j = x1; j <= x2; j++) {
+                for (var i = y1; i <= y2; i++) {
+                    if (grid[i][j] == 1) { // grid square is obstructed
+                        var distanceFromObstructedGrid = 
+                            Math.pow(j + 0.5 - newX, 2) + Math.pow(i + 0.5 - newY, 2);
+                        
+                        var hardCollisionThreshold = 
+                            Math.pow(this.radius / game.gridSize + 0.1, 2);
+
+                        var softCollisionThreshold = 
+                            Math.pow(this.radius / game.gridSize + 0.7, 2);
+
+                        var collisionType;
+                        // collisionTypes:
+                        // hard: vehicles are colliding
+                        // soft: vehicles are almost ready to collide
+                        if (distanceFromObstructedGrid < hardCollisionThreshold) {
+                            // Distance of obstructed grid from vehicle is less than hard collision threshold
+                            collisionType = "hard";
+                        } else if (distanceFromObstructedGrid < softCollisionThreshold) {
+                            // Distance of obstructed grid from vehicle is less than soft collision threshold
+                            collisionType = "soft";
+                        }
+
+                        if (collisionType) {
+                            collisionObjects.push({
+                                collisionType: collisionType,
+                                with: {
+                                    type: "wall",
+                                    x: j + 0.5,
+                                    y: i + 0.5
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+
+            for (var i = game.vehicles.length - 1; i >= 0; i--) {
+                var vehicle = game.vehicles[i];
+
+                // Test vehicles that are less than 3 squares away for collisions
+                var squaresDistance = 3;
+                if (vehicle != this && Math.abs(vehicle.x - this.x) < squaresDistance &&
+                    Math.abs(vehicle.y - this.y) < squaresDistance) {
+                    
+                    var distanceFromVehicle = 
+                        Math.pow(vehicle.x - newX, 2) + Math.pow(vehicle.y - newY, 2);
+                    
+                    var hardCollisionThreshold = 
+                        Math.pow((this.radius + vehicle.radius) / game.gridSize, 2);
+
+                    var softCollisionThreshold =
+                        Math.pow((this.radius * 1.5 + vehicle.radius) / game.gridSize, 2);
+
+                    var collisionType;
+                    if (distanceFromVehicle < hardCollisionThreshold) {
+                        // Distance between vehicles is less than hard collision threshold (sum of vehicles radius)
+                        collisionType = "hard";
+                    } else if (distanceFromVehicle < softCollisionThreshold) {
+                        // Distance between vehicles is less than soft collision threshold (1.5 times vehicles radius + colliding vehicle radius)
+                        collisionType = "soft";
+                          
+                    }
+
+                    if (collisionType) {
+                        collisionObjects.push({
+                            collisionType: collisionType,
+                            with: vehicle
+                        });
+                    }
+                }
+            }
+
+            return collisionObjects;
         },
     },
 
