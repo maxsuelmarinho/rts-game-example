@@ -79,11 +79,31 @@ var game = {
         game.sortedItems.sort(function(a, b) {
             return b.y - a.y + ((b.y == a.y) ? (a.x - b.x) : 0);
         });
+
+        // save the time that the last animation loop completed
+        game.lastAnimationTime = (new Date()).getTime();
     },
 
     // run as often as the browser allows
     drawingLoop: function() {
         game.handlePanning();
+
+        // check the time since the game was animated
+        // and calculate a linear interpolation factor (-1 to 0)
+        // since drawing will happen mode often than animation
+        game.lastDrawTime = (new Date()).getTime();
+        if (game.lastAnimationTime) {
+            game.drawingInterpolationFactor =
+                (game.lastDrawTime - game.lastAnimationTime) / game.animationTimeout - 1;
+            if (game.drawingInterpolationFactor > 0) {
+                // no point interpolating beyond the next animation loop...
+                // 0 means that we draw the unit at an intermediate location between the two points
+                game.drawingInterpolationFactor = 0;
+            }
+        } else {
+            // -1 indicates that we draw the unit at the previous location
+            game.drawingInterpolationFactor = -1;
+        }
 
         // Only redraw the background if it has change
         if (game.refreshBackground) {
