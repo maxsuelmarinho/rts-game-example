@@ -231,6 +231,54 @@ var vehicles = {
                         }
                     }
                     break;
+                case "deploy":
+                    // if oilfield has been used already, then cancel order
+                    if (this.orders.to.lifeCode == "dead") {
+                        this.orders = { type: "stand" };
+                        return;
+                    }
+
+                    // move to middle of oil field
+                    var target = {
+                        x: this.orders.to.x + 1,
+                        y: this.orders.to.y + 0.5,
+                        type: "terrain"
+                    };
+
+                    var distanceFromTargetSquared = 
+                        Math.pow(target.x - this.x, 2) + Math.pow(target.y - this.y, 2);
+                    if (distanceFromTargetSquared < Math.pow(this.radius * 2 / game.gridSize, 2)) {
+                        // after reaching oil field, turn harvester to point towards left (direction 6)
+                        var difference = angleDiff(this.direction, 6, this.directions);
+                        var turnAmount = this.turnSpeed * game.turnSpeedAdjustmentFactor;
+                        if (Math.abs(difference) > turnAmount) {
+                            this.direction = wrapDirection(
+                                this.direction + turnAmount * Math.abs(difference) / difference, this.directions);
+                        } else {
+                            // once it is pointing to the left, remove the harvester and oil field
+                            // and deploy a harvester building
+                            game.remove(this.orders.to);
+                            this.orders.to.lifeCode = "dead";
+                            game.remove(this);
+                            this.lifeCode = "dead";
+                            game.add({
+                                type: "buildings",
+                                name: "harvester",
+                                x: this.orders.to.x,
+                                y: this.orders.to.y,
+                                action: "deploy",
+                                team: this.team
+                            });
+                        }
+                    } else {
+                        var moving = this.moveTo(target);
+                        // Pathfinding couldn't find a path, so stop
+                        if (!moving) {
+                            this.orders = { type: "stand" };
+                        }
+                    }
+
+                    break;
             }
         },
 
