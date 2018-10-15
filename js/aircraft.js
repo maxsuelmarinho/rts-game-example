@@ -79,8 +79,10 @@ var aircraft = {
         },
 
         draw: function() {
-            var x = (this.x * game.gridSize) - game.offsetX - this.pixelOffsetX + this.lastMovementX * game.drawingInterpolationFactor * game.gridSize;
-            var y = (this.y * game.gridSize) - game.offsetY - this.pixelOffsetY - this.pixelShadowHeight + this.lastMovementY * game.drawingInterpolationFactor * game.gridSize;
+            var interpolationX = this.lastMovementX * game.drawingInterpolationFactor * game.gridSize;
+            var interpolationY = this.lastMovementY * game.drawingInterpolationFactor * game.gridSize;
+            var x = (this.x * game.gridSize) - game.offsetX - this.pixelOffsetX + interpolationX;
+            var y = (this.y * game.gridSize) - game.offsetY - this.pixelOffsetY - this.pixelShadowHeight + interpolationY;
 
             this.drawingX = x;
             this.drawingY = y;

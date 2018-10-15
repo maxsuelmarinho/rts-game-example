@@ -4,8 +4,8 @@ var maps = {
             "name": "Introduction",
             "briefing": "In this level you will learn how to pan across the map.\n\nDon't worry! We will be implementing mode features soon.",
             "mapImage": "images/maps/level-one-debug-grid.png",
-            "startX": 4,
-            "startY": 4,
+            "startX": 2,
+            "startY": 3,
             "mapGridWidth": 60,
             "mapGridHeight": 40,
             "mapObstructedTerrain": [

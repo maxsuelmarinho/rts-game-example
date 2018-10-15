@@ -37,7 +37,7 @@ var vehicles = {
         "scout-tank": {
             name: "scout-tank",
             pixelWidth: 21,
-            pixelHeight: 20,
+            pixelHeight: 21,
             pixelOffsetX: 10,
             pixelOffsetY: 10,
             radius: 11,
@@ -111,8 +111,10 @@ var vehicles = {
         },
         
         draw: function() {
-            var x = (this.x * game.gridSize) - game.offsetX - this.pixelOffsetX + this.lastMovementX * game.drawingInterpolationFactor * game.gridSize;
-            var y = (this.y * game.gridSize) - game.offsetY - this.pixelOffsetY + this.lastMovementY * game.drawingInterpolationFactor * game.gridSize;
+            var interpolatedX = this.lastMovementX * game.drawingInterpolationFactor * game.gridSize;
+            var interpolatedY = this.lastMovementY * game.drawingInterpolationFactor * game.gridSize;
+            var x = (this.x * game.gridSize) - game.offsetX - this.pixelOffsetX + interpolatedX;
+            var y = (this.y * game.gridSize) - game.offsetY - this.pixelOffsetY + interpolatedY;
 
             this.drawingX = x;
             this.drawingY = y;
@@ -189,6 +191,7 @@ var vehicles = {
         processOrders: function() {
             this.lastMovementX = 0;
             this.lastMovementY = 0;
+            var target;
             switch (this.orders.type) {
                 case "move":
                     // move towards destination until distance from destination
@@ -199,7 +202,7 @@ var vehicles = {
                         this.orders = { type: "stand" };
                         console.log("Vehicle stand:", "Stop when within one radius of the destination");
                         return;
-                    } else if (distanceFromDestinationSquared < Math.pow(this.radius * 3 / game.gridSize, 2)) {
+                    } else if (this.colliding && (distanceFromDestinationSquared < Math.pow(this.radius * 3 / game.gridSize, 2))) {
                         // Stop when within 3 radius of the destination if colliding with something
                         this.orders = { type: "stand" };
                         return;
@@ -428,27 +431,15 @@ var vehicles = {
                         var softCollisionThreshold = 
                             Math.pow(this.radius / game.gridSize + 0.7, 2);
 
-                        var collisionType;
                         // collisionTypes:
                         // hard: vehicles are colliding
                         // soft: vehicles are almost ready to collide
                         if (distanceFromObstructedGrid < hardCollisionThreshold) {
                             // Distance of obstructed grid from vehicle is less than hard collision threshold
-                            collisionType = "hard";
+                            collisionObjects.push({ collisionType: "hard", with: { type: "wall", x: j + 0.5, y: i + 0.5 } });
                         } else if (distanceFromObstructedGrid < softCollisionThreshold) {
                             // Distance of obstructed grid from vehicle is less than soft collision threshold
-                            collisionType = "soft";
-                        }
-
-                        if (collisionType) {
-                            collisionObjects.push({
-                                collisionType: collisionType,
-                                with: {
-                                    type: "wall",
-                                    x: j + 0.5,
-                                    y: i + 0.5
-                                }
-                            });
+                            collisionObjects.push({ collisionType: "soft", with: { type: "wall", x: j + 0.5, y: i + 0.5 } });
                         }
                     }
                 }
@@ -471,21 +462,12 @@ var vehicles = {
                     var softCollisionThreshold =
                         Math.pow((this.radius * 1.5 + vehicle.radius) / game.gridSize, 2);
 
-                    var collisionType;
                     if (distanceFromVehicle < hardCollisionThreshold) {
                         // Distance between vehicles is less than hard collision threshold (sum of vehicles radius)
-                        collisionType = "hard";
+                        collisionObjects.push({ collisionType: "hard", with: vehicle });
                     } else if (distanceFromVehicle < softCollisionThreshold) {
                         // Distance between vehicles is less than soft collision threshold (1.5 times vehicles radius + colliding vehicle radius)
-                        collisionType = "soft";
-                          
-                    }
-
-                    if (collisionType) {
-                        collisionObjects.push({
-                            collisionType: collisionType,
-                            with: vehicle
-                        });
+                        collisionObjects.push({ collisionType: "soft", with: vehicle });     
                     }
                 }
             }

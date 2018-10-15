@@ -7,6 +7,8 @@ var game = {
 
     gridSize: 20,
 
+    refreshBackground: true,
+
     backgroundChanged: true,
 
     animationTimeout: 100, // 100 milliseconds
@@ -117,12 +119,15 @@ var game = {
         }
 
         // clear the foreground canvas
-        game.foregroundContext.clearRect(
-            0,
-            0,
-            game.canvasWidth,
-            game.canvasHeight
-        );
+        // game.foregroundContext.clearRect(
+        //     0,
+        //     0,
+        //     game.canvasWidth,
+        //     game.canvasHeight
+        // );
+
+        // fast way to clear the foreground canvas
+        game.foregroundCanvas.width = game.foregroundCanvas.width;
 
         // start drawing the foreground elements
         for (var i = game.sortedItems.length - 1; i >= 0; i--) {
@@ -255,7 +260,7 @@ var game = {
             }
         }
 
-        if (item.type == "buildins" || item.type == "terrain") {
+        if (item.type == "buildings" || item.type == "terrain") {
             game.currentMapPassableGrid = undefined;
         }
     },
@@ -288,10 +293,13 @@ var game = {
     },
 
     sendCommand: function(uids, details) {
-        if (game.type == "singleplayer") {
-            singleplayer.sendCommand(uids, details);
-        } else {
-            multiplayer.sendCommand(uids, details);
+        switch (game.type) {
+            case "singleplayer":
+                singleplayer.sendCommand(uids, details);
+                break;
+            case "multiplayer":
+                multiplayer.sendCommand(uids, details);
+                break;
         }
     },
 
@@ -304,10 +312,10 @@ var game = {
     },
 
     processCommand: function(uids, details) {
-        var toObject;
+        
         if (details.toUid) {
-            toObject = game.getItemByUid(details.toUid);
-            if (!toObject || toObject.lifeCode == "dead") {
+            details.to = game.getItemByUid(details.toUid);
+            if (!details.to || details.to.lifeCode == "dead") {
                 // object no longer exists. Invalid command
                 return;
             }
@@ -318,9 +326,6 @@ var game = {
             var item = game.getItemByUid(uid);
             if (item) {
                 item.orders = $.extend([], details);
-                if (toObject) {
-                    item.orders.to = toObject;
-                }
             }
         }
     },

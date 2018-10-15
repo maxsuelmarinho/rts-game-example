@@ -187,9 +187,8 @@ var mouse = {
                             x1 <= item.x &&
                             x2 >= item.x) {
                             
-                            if ((item.type == "vehicles" && y1 <= item.y && y2 >= item.y) ||
-                                (item.type == "aircraft" && 
-                                    (y1 <= item.y - item.pixelShadowHeight / game.gridSize) && 
+                            if ((item.type != "aircraft" && y1 <= item.y && y2 >= item.y) ||
+                                ((y1 <= item.y - item.pixelShadowHeight / game.gridSize) && 
                                     (y2 >= item.y - item.pixelShadowHeight / game.gridSize))) {
                                 
                                 game.selectItem(item, shiftPressed);
