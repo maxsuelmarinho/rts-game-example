@@ -65,6 +65,8 @@ var game = {
 
     // the animation loop will run at a fixed interval (100ms)
     animationLoop: function() {
+        // animate the sidebar
+        sidebar.animate();
 
         // process orders for any item that handles it
         for (var i = game.items.length - 1; i >= 0; i--) {

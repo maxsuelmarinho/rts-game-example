@@ -61,6 +61,10 @@ var singleplayer = {
         }
         game.currentMapPassableGrid = undefined;
 
+        // load starting cash for game
+        console.log("cash", level.cash);
+        game.cash = $.extend([], level.cash);
+
         if (loader.loaded) {
             $('#entermission').removeAttr('disabled');
         } else {

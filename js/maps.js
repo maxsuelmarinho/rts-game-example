@@ -82,196 +82,36 @@ var maps = {
                 },
                 {
                     "type": "buildings",
-                    "name": "base",
-                    "x": 42,
-                    "y": 16,
-                    "team": "green"
-                },
-                {
-                    "type": "buildings",
-                    "name": "base",
-                    "x": 45,
-                    "y": 15,
-                    "team": "green",
-                    "life": 50
-                },
-
-                {
-                    "type": "buildings",
                     "name": "starport",
                     "x": 18,
                     "y": 14,
                     "team": "blue"
                 },
-                {
-                    "type": "buildings",
-                    "name": "starport",
-                    "x": 18,
-                    "y": 10,
-                    "team": "blue",
-                    "action": "teleport"
-                },
-                {
-                    "type": "buildings",
-                    "name": "starport",
-                    "x": 45,
-                    "y": 6,
-                    "team": "green",
-                    "action": "open"
-                },
-
-                {
-                    "type": "buildings",
-                    "name": "harvester",
-                    "x": 20,
-                    "y": 10,
-                    "team": "blue"
-                },
-                {
-                    "type": "buildings",
-                    "name": "harvester",
-                    "x": 42,
-                    "y": 12,
-                    "team": "green",
-                    "action": "deploy"
-                },
-
-                {
-                    "type": "buildings",
-                    "name": "ground-turret",
-                    "x": 14,
-                    "y": 9,
-                    "team": "blue",
-                    "direction": 3
-                },
-                {
-                    "type": "buildings",
-                    "name": "ground-turret",
-                    "x": 42,
-                    "y": 14,
-                    "team": "green",
-                    "direction": 1
-                },
-                {
-                    "type": "buildings",
-                    "name": "ground-turret",
-                    "x": 16,
-                    "y": 10,
-                    "team": "blue",
-                    "action": "teleport"
-                },
-
+                
                 // vehicles
                 {
                     "type": "vehicles",
-                    "name": "transport",
-                    "x": 26,
-                    "y": 10,
-                    "team": "blue",
-                    "direction": 2
-                },
-                {
-                    "type": "vehicles",
                     "name": "harvester",
-                    "x": 26,
+                    "x": 16,
                     "y": 12,
                     "team": "blue",
-                    "direction": 3
+                    "direction": 3,
+                    "uid": -1
                 },
-                {
-                    "type": "vehicles",
-                    "name": "scout-tank",
-                    "x": 26,
-                    "y": 14,
-                    "team": "blue",
-                    "direction": 4
-                },
-                {
-                    "type": "vehicles",
-                    "name": "heavy-tank",
-                    "x": 26,
-                    "y": 16,
-                    "team": "blue",
-                    "direction": 5
-                },
-                {
-                    "type": "vehicles",
-                    "name": "transport",
-                    "x": 48,
-                    "y": 10,
-                    "team": "green",
-                    "direction": 7
-                },
-                {
-                    "type": "vehicles",
-                    "name": "harvester",
-                    "x": 47,
-                    "y": 12,
-                    "team": "green",
-                    "direction": 6
-                },
-                {
-                    "type": "vehicles",
-                    "name": "scout-tank",
-                    "x": 58,
-                    "y": 14,
-                    "team": "green",
-                    "direction": 1
-                },
-                {
-                    "type": "vehicles",
-                    "name": "heavy-tank",
-                    "x": 58,
-                    "y": 16,
-                    "team": "green",
-                    "direction": 0
-                },
-
-                // aircrafts
-                {
-                    "type": "aircraft",
-                    "name": "chopper",
-                    "x": 20,
-                    "y": 22,
-                    "team": "blue",
-                    "direction": 5
-                },
-                {
-                    "type": "aircraft",
-                    "name": "wraith",
-                    "x": 25,
-                    "y": 22,
-                    "team": "blue",
-                    "direction": 3
-                },
-                {
-                    "type": "aircraft",
-                    "name": "wraith",
-                    "x": 43,
-                    "y": 22,
-                    "team": "green",
-                    "direction": 3
-                },
-
+                
                 // terrain
                 {
                     "type": "terrain",
                     "name": "oilfield",
-                    "x": 5,
-                    "y": 7
-                },
-                {
-                    "type": "terrain",
-                    "name": "oilfield",
-                    "x": 8,
-                    "y": 7,
+                    "x": 3,
+                    "y": 5,
                     "action": "hint"
                 },
                 {
                     "type": "terrain",
                     "name": "bigrocks",
-                    "x": 5,
-                    "y": 3
+                    "x": 19,
+                    "y": 6
                 },
                 {
                     "type": "terrain",
@@ -279,7 +119,12 @@ var maps = {
                     "x": 8,
                     "y": 3
                 }
-            ]
+            ],
+
+            "cash": {
+                "blue": 5000,
+                "green": 1000
+            },
         },
-    ]
+    ],    
 };

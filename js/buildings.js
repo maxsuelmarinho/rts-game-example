@@ -191,10 +191,10 @@ var buildings = {
                     this.imageList = this.spriteArray["deploy"];
                     this.imageOffset = this.imageList.offset + this.animationIndex;
                     this.animationIndex++;
-                    // once deploying is complete, go back to stand
+                    // once deploying is complete, go to harvest now
                     if (this.animationIndex >= this.imageList.count) {
                         this.animationIndex = 0;
-                        this.action = "stand";
+                        this.action = "harvest";
                     }
                     break;
                 case "guard":
@@ -204,6 +204,18 @@ var buildings = {
                         this.imageList = this.spriteArray[this.lifeCode + "-" + this.direction];
                     }
                     this.imageOffset = this.imageList.offset;
+                    break;
+                case "harvest":
+                    this.imageList = this.spriteArray[this.lifeCode];
+                    this.imageOffset = this.imageList.offset + this.animationIndex;
+                    this.animationIndex++;
+                    if (this.animationIndex >= this.imageList.count) {
+                        this.animationIndex = 0;
+                        if (this.lifeCode == "healthy") {
+                            // harvesters mine 2 credits of cash per animation cycle
+                            game.cash[this.team] += 2;
+                        }
+                    }
                     break;
             }
         },
