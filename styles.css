@@ -150,3 +150,95 @@
 #gameinterfacescreen #backgroundcanvas {
     z-index: 0;
 }
+
+/* sidebar buttons */
+#gameinterfacescreen #sidebarbuttons {
+	position: absolute;
+	left: 500px;
+	top: 305px;
+	width: 152px;
+	height: 148px;
+	overflow: none;
+}
+
+#gameinterfacescreen #sidebarbuttons input[type="button"] {
+	width: 43px;
+	height: 35px;
+	border-width: 0px;
+	padding: 0px;
+	background-image: url(images/buttons.png);
+}
+
+/* grayed out state for buttons */
+#starportbutton:active, #starportbutton:disabled {
+	background-position: -2px -305px;
+}
+
+#placeholder1:active, #placeholder1:disabled {
+	background-position: -52px -305px;
+}
+
+#turrentbutton:active, #turrentbutton:disabled {
+	background-position: -100px -305px;
+}
+
+#scouttankbutton:active, #scouttankbutton:disabled {
+	background-position: -2px -346px;
+}
+
+#heavytankbutton:active, #heavytankbutton:disabled {
+	background-position: -52px -346px;
+}
+
+#harvesterbutton:active, #harvesterbutton:disabled {
+	background-position: -102px -346px;
+}
+
+#chopperbutton:active, #chopperbutton:disabled {
+	background-position: -2px -387px;
+}
+
+#placeholder2:active, #placeholder2:disabled {
+	background-position: -52px -387px;
+}
+
+#wraithbutton:active, #wraithbutton:disabled {
+	background-position: -102px -387px;
+}
+
+/* regular state for buttons */
+#starportbutton {
+	background-position: -167px -305px;
+}
+
+#placeholder1 {
+	background-position: -216px -305px;
+}
+
+#turretbutton {
+	background-position: -264px -305px;
+}
+
+#scouttankbutton {
+	background-position: -167px -346px;
+}
+
+#heavytankbutton {
+	background-position: -216px -346px;
+}
+
+#harvesterbutton {
+	background-position: -264px -346px;
+}
+
+#chopperbutton {
+	background-position: -167px -387px;
+}
+
+#placeholder2 {
+	background-position: -216px -387px;
+}
+
+#wraithbutton {
+	background-position: -264px -387px;
+}
