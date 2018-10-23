@@ -178,8 +178,8 @@
 	background-position: -52px -305px;
 }
 
-#turrentbutton:active, #turrentbutton:disabled {
-	background-position: -100px -305px;
+#turretbutton:active, #turretbutton:disabled {
+	background-position: -102px -305px;
 }
 
 #scouttankbutton:active, #scouttankbutton:disabled {
