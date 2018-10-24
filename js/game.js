@@ -40,6 +40,7 @@ var game = {
     init: function() {
         loader.init();
         mouse.init();
+        sidebar.init();
 
         $('.gamelayer').hide();
         $('#gamestartscreen').show();

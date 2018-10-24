@@ -1,4 +1,46 @@
 var sidebar = {
+    init: function() {
+        $("#scouttankbutton").click(function() {
+            sidebar.constructAtStarport({ type: "vehicles", name: "scout-tank" });
+        });
+
+        $("#heavytankbutton").click(function () {
+            sidebar.constructAtStarport({ type: "vehicles", name: "heavy-tank" });
+        });
+
+        $("#harvesterbutton").click(function () {
+            sidebar.constructAtStarport({ type: "vehicles", name: "harvester" });
+        });
+
+        $("#chopperbutton").click(function () {
+            sidebar.constructAtStarport({ type: "aircraft", name: "chopper" });
+        });
+
+        $("#wraithbutton").click(function () {
+            sidebar.constructAtStarport({ type: "aircraft", name: "wraith" });
+        });
+    },
+
+    constructAtStarport: function(unitDetails) {
+        var starport;
+
+        // find the first eligible starport among selected items
+        for (var i = game.selectedItems.length - 1; i >= 0; i--) {
+            var item = game.selectedItems[i];
+            if (item.type == "buildings" && item.name == "starport"
+                && item.team == game.team && item.lifeCode == "healthy"
+                && item.action == "stand") {
+                
+                starport = item;
+                break;
+            }
+        }
+
+        if (starport) {
+            game.sendCommand([starport.uid], { type: "construct-unit", details: unitDetails });
+        }
+    },
+
     animate: function() {
         // display the current cash balance value
         $('#cash').html(game.cash[game.team]);
