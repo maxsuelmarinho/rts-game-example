@@ -29,16 +29,19 @@
 
 var loader = {
     loaded: true,
-    loadedCount: 0,
-    totalCount: 0,
+    loadedCount: 0, // assets that have been loaded so far
+    totalCount: 0, // total number of assets to load
+    soundFileExtention: ".ogg",
 
     init: function() {
+        // check for sound support
         var mp3Support, oggSupport;
         var audio = document.createElement('audio');
-        if (audio.canPlayType) {
+        if (audio.canPlayType) { // "", "maybe", "probably"
             mp3Support = "" != audio.canPlayType('audio/mpeg');
             oggSupport = "" != audio.canPlayType('audio/ogg; codecs="vorbis"');
         } else {
+            // the audio tag is not supported
             mp3Support = false;
             oggSupport = false;
         }
@@ -50,21 +53,22 @@ var loader = {
         this.totalCount++;
         this.loaded = false;
 
-        $('#loadingscreen').show();
+        //$('#loadingscreen').show();
+        game.showScreen("loadingscreen");
 
         var image = new Image();
         image.src = url;
-        image.onload = loader.itemLoaded;
+        //image.onload = loader.itemLoaded;
+        image.addEventListener("load", loader.itemLoaded, false);
         return image;
     },
     
-    soundFileExtention: ".ogg",
-
     loadSound: function(url) {
         this.totalCount++;
         this.loaded = false;
 
-        $('#loadingscreen').show();
+        //$('#loadingscreen').show();
+        game.showScreen("loadingscreen");
 
         var audio = new Audio();
         audio.src = url + loader.soundFileExtention;
@@ -72,15 +76,23 @@ var loader = {
         return audio;
     },
 
-    itemLoaded: function() {
+    itemLoaded: function(ev) {
         loader.loadedCount++;
+        // stop listening for event type (load or canplaythrough) for this item now that it has been loaded
+        ev.target.removeEventListener(ev.type, loader.itemLoaded, false);
 
-        $('#loadingmessage').html('Loaded ' + loader.loadedCount + ' of ' + loader.totalCount);
+        //$('#loadingmessage').html('Loaded ' + loader.loadedCount + ' of ' + loader.totalCount);
+        document.getElementById("loadingmessage").innerHTML = 'Loaded ' + loader.loadedCount + ' of ' + loader.totalCount;
 
         if (loader.loadedCount === loader.totalCount) {
+            // loader has loaded completely
+            // reset and clear the loader
             loader.loaded = true;
+            loader.loadedCount = 0;
+            loader.totalCount = 0;
 
-            $('#loadingscreen').hide();
+            //$('#loadingscreen').hide();
+            game.hideScreen("loadingscreen");
 
             if (loader.onload) {
                 loader.onload();

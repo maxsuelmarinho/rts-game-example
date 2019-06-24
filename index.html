@@ -2,57 +2,86 @@
 <html>
     <head>
         <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
         <title>Last Colony</title>
-        <script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="js/astar.js" type="text/javascript" charset="utf-8"></script>
+        <!--<script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>-->
+        <!--<script src="js/astar.js" type="text/javascript" charset="utf-8"></script>-->
         <script src="js/common.js" type="text/javascript" charset="utf-8"></script>
         <script src="js/game.js" type="text/javascript" charset="utf-8"></script>
         <script src="js/mouse.js" type="text/javascript" charset="utf-8"></script>
         <script src="js/singleplayer.js" type="text/javascript" charset="utf-8"></script>
+        <script src="js/levels.js" type="text/javascript" charset="utf-8"></script>        
+        <!--        
         <script src="js/maps.js" type="text/javascript" charset="utf-8"></script>
         <script src="js/buildings.js" type="text/javascript" charset="utf-8"></script>
         <script src="js/vehicles.js" type="text/javascript" charset="utf-8"></script>
         <script src="js/aircraft.js" type="text/javascript" charset="utf-8"></script>
         <script src="js/terrain.js" type="text/javascript" charset="utf-8"></script>
         <script src="js/sidebar.js" type="text/javascript" charset="utf-8"></script>
+        -->
         <link rel="stylesheet" href="styles.css" type="text/css" media="screen" charset="utf-8">
     </head>
     <body>
-        <div id="gamecontainer">
-            <div id="gamestartscreen" class="gamelayer">
-                <span id="singleplayer" onclick="singleplayer.start();">Campaign</span>
-                <span id="multiplayer" onclick="multiplayer.start();">Multiplayer</span>
-            </div>
-
-            <div id="missionscreen" class="gamelayer">
-                <input type="button" id="entermission" onclick="singleplayer.play();">
-                <input type="button" id="exitmission" onclick="singleplayer.exit();">
-                <div id="missionbriefing"></div>
-            </div>
-
-            <div id="gameinterfacescreen" class="gamelayer">
-                <div id="gamemessages"></div>
-                <div id="callerpicture"></div>
-                <div id="cash"></div>
-                <div id="sidebarbuttons">
-                    <input type="button" id="starportbutton" title="Starport">
-                    <input type="button" id="turretbutton" title="Turret">
-                    <input type="button" id="placeholder1" disabled>
-
-                    <input type="button" id="scouttankbutton" title="Scout Tank">
-                    <input type="button" id="heavytankbutton" title="Heavy Tank">
-                    <input type="button" id="harvesterbutton" title="Harvester">
-
-                    <input type="button" id="chopperbutton" title="Chopper">
-                    <input type="button" id="wraithbutton" title="Wraith">
-                    <input type="button" id="placeholder2" disabled>
+        <div id="wrapper">
+            <div id="gamecontainer">
+                <div id="gamestartscreen" class="gamelayer">
+                    <span class="game-title">LAST<br>COLONY</span>
+                    <span class="game-option" id="singleplayer" onclick="singleplayer.start();">Campaign</span>
+                    <span class="game-option" id="multiplayer" onclick="multiplayer.start();">Multiplayer</span>
                 </div>
-                <canvas id="gamebackgroundcanvas" width="480" height="400"></canvas>
-                <canvas id="gameforegroundcanvas" width="480" height="400"></canvas>
-            </div>
 
-            <div id="loadingscreen" class="gamelayer">
-                <div id="loadingmessage"></div>
+                <div id="missionbriefingscreen" class="gamelayer">
+                    <img src="images/screens/interface-left.png" class="left-panel" draggable="false">
+                    <img src="images/screens/interface-right-briefing.png" class="right-panel" draggable="false">
+                    <input type="button" id="entermission" onclick="singleplayer.play();">
+                    <input type="button" id="exitmission" onclick="singleplayer.exit();">
+                    <div id="missionbriefing"></div>
+                </div>
+
+                <div id="gameinterfacescreen" class="gamelayer">
+                    <img src="images/screens/interface-left.png" class="left-panel" draggable="false">
+                    <img src="images/screens/interface-right-game.png" class="right-panel" draggable="false">
+                    <div id="gamemessages"></div>
+                    <div id="callerpicture"></div>
+                    <div id="cash"></div>
+                    <div id="sidebarbuttons"></div>
+                    <canvas id="gamebackgroundcanvas"></canvas>
+                    <canvas id="gameforegroundcanvas"></canvas>
+                </div>
+
+                <div id="loadingscreen" class="gamelayer">
+                    <div id="loadingmessage"></div>
+                </div>
+
+                <!--
+                <div id="missionscreen" class="gamelayer">
+                    <input type="button" id="entermission" onclick="singleplayer.play();">
+                    <input type="button" id="exitmission" onclick="singleplayer.exit();">
+                    <div id="missionbriefing"></div>
+                </div>
+
+                <div id="gameinterfacescreen" class="gamelayer">
+                    <div id="gamemessages"></div>
+                    <div id="callerpicture"></div>
+                    <div id="cash"></div>
+                    <div id="sidebarbuttons">
+                        <input type="button" id="starportbutton" title="Starport">
+                        <input type="button" id="turretbutton" title="Turret">
+                        <input type="button" id="placeholder1" disabled>
+
+                        <input type="button" id="scouttankbutton" title="Scout Tank">
+                        <input type="button" id="heavytankbutton" title="Heavy Tank">
+                        <input type="button" id="harvesterbutton" title="Harvester">
+
+                        <input type="button" id="chopperbutton" title="Chopper">
+                        <input type="button" id="wraithbutton" title="Wraith">
+                        <input type="button" id="placeholder2" disabled>
+                    </div>
+                    <canvas id="gamebackgroundcanvas" width="480" height="400"></canvas>
+                    <canvas id="gameforegroundcanvas" width="480" height="400"></canvas>
+                </div>
+                
+                -->
             </div>
         </div>
     </body>

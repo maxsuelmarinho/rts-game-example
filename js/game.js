@@ -1,71 +1,139 @@
+/*
 $(window).load(function() {
     game.init();
 });
-
+*/
 var game = {
-    debug: false,
 
-    gridSize: 20,
+    defaultWidth: 640,
+    defaultHeight: 480,
+    canvasWidth: 480,
+    canvasHeight: 400,
 
-    refreshBackground: true,
+    scale: 1,
 
-    backgroundChanged: true,
+    // a control loop that runs at a fixed period of time
+    animationTimeout: 100, // 100 milliseconds or 10 times a second
 
-    animationTimeout: 100, // 100 milliseconds
-
+    // x and y panning offsets for the map
     offsetX: 0,
-
     offsetY: 0,
 
-    panningThreshold: 60, // distance from canvas's edge at which panning starts
+    gridSize: 20, // the map is broken into square tiles of the size (20 x 20 px)
 
+    panningThreshold: 80, // distance from canvas's edge at which panning starts
+    maximumPanDistance: 10, //the maximum distance to pan in a single drawing loop
+
+    refreshBackground: false,
+
+    /*
+    debug: false,    
+    backgroundChanged: true,
     panningSpeed: 10,
-
     selectionBorderColor: "rgb(255, 255, 0, 0.5)",
-
     selectionFillColor: "rgb(255, 215, 0, 0.2)",
-
     healthBarBorderColor: "rgb(0, 0, 0, 0.8)",
-
     healthBarHealthyFillColor: "rgb(0, 255, 0, 0.5)",
-
     healthBarDamagedFillColor: "rgb(255, 0, 0, 0.5)",
-
     lifeBarHeight: 5,
-
     speedAdjustmentFactor: 1 / 64,
-
     turnSpeedAdjustmentFactor: 1 / 8,
+    */
 
     init: function() {
+        // initialize objects
         loader.init();
         mouse.init();
-        sidebar.init();
+        //sidebar.init();
 
-        $('.gamelayer').hide();
-        $('#gamestartscreen').show();
+        // initialize and store contexts for both canvases
+        game.initCanvases();
 
+        //$('.gamelayer').hide();
+        game.hideScreens();        
+        //$('#gamestartscreen').show();
+        game.showScreen("gamestartscreen");
+    },
+
+    initCanvases: function() {
         game.backgroundCanvas = document.getElementById('gamebackgroundcanvas');
         game.backgroundContext = game.backgroundCanvas.getContext('2d');
 
         game.foregroundCanvas = document.getElementById('gameforegroundcanvas');
         game.foregroundContext = game.foregroundCanvas.getContext('2d');
 
-        game.canvasWidth = game.backgroundCanvas.width;
-        game.canvasHeight = game.backgroundCanvas.height;
+        game.backgroundCanvas.width = game.canvasWidth;
+        game.backgroundCanvas.height = game.canvasHeight;
+
+        game.foregroundCanvas.width = game.canvasWidth;
+        game.foregroundCanvas.height = game.canvasHeight;
+    },
+
+    hideScreens: function() {
+        var screens = document.getElementsByClassName("gamelayer");
+        for(let i = screens.length - 1; i >= 0; i--) {
+            let screen = screens[i];
+            screen.style.display = "none";
+        }
+    },
+
+    hideScreen: function(id) {
+        var screen = document.getElementById(id);
+        screen.style.display = "none";
+    },
+
+    showScreen: function(id) {
+        var screen = document.getElementById(id);
+        screen.style.display = "block";
+    },
+
+    resize: function() {
+        var maxWidth = window.innerWidth;
+        var maxHeight = window.innerHeight;
+        var scale = Math.min(maxWidth / game.defaultWidth, maxHeight / game.defaultHeight);
+
+        var gameContainer = document.getElementById("gamecontainer");
+        gameContainer.style.transform = "translate(-50%, -50%) " + "scale(" + scale + ")";
+        game.scale = scale;
+
+        // what is the maximum width we can set based on the current scale
+        // clamp the value between 640 and 1024
+        var width = Math.max(640, Math.min(1024, maxWidth / scale));
+        // apply this new width to game container and game canvas
+        gameContainer.style.width = width + "px";
+
+        // subtract 160px for the sidebar
+        var canvasWidth = width - 160;
+        // set a flag in case the canvas was resized
+        if (game.canvasWidth !== canvasWidth) {
+            game.canvasWidth = canvasWidth;
+            game.canvasResized = true;
+        }
+    },
+
+    loadLevelData: function(level) {
+        game.currentLevel = level;
+        game.currentMap = maps[level.mapName];
+
+        // load all the assets for the level starting with the map image
+        game.currentMapImage = loader.loadImage("images/maps/" + maps[level.mapName].mapImage);
     },
 
     start: function() {
-        $('.gamelayer').hide();
-        $('#gameinterfacescreen').show();
+        //$('.gamelayer').hide();
+        //$('#gameinterfacescreen').show();
+        game.hideScreens();
+        game.showScreen("gameinterfacescreen");
         game.running = true;
         game.refreshBackground = true;
+        game.canvasResized = true;
 
         game.drawingLoop();
     },
 
     // the animation loop will run at a fixed interval (100ms)
     animationLoop: function() {
+        /*
         // animate the sidebar
         sidebar.animate();
 
@@ -87,12 +155,25 @@ var game = {
 
         // save the time that the last animation loop completed
         game.lastAnimationTime = (new Date()).getTime();
+        */
     },
 
     // run as often as the browser allows
     drawingLoop: function() {
+        // pan the map if the cursor is near the edge of the canvas
         game.handlePanning();
+        
+        // draw the background whenever necessary
+        game.drawBackground();
 
+        // call the drawing loop for the next frame using request animation frame
+        if (game.running) {
+            requestAnimationFrame(game.drawingLoop);
+        }
+    },
+
+    drawBackground: function() {
+        /*
         // check the time since the game was animated
         // and calculate a linear interpolation factor (-1 to 0)
         // since drawing will happen mode often than animation
@@ -109,9 +190,26 @@ var game = {
             // -1 indicates that we draw the unit at the previous location
             game.drawingInterpolationFactor = -1;
         }
+        */
 
-        // Only redraw the background if it has change
-        if (game.refreshBackground) {
+        // Only redraw the background if it has changes (due to panning or resizing)
+        if (game.refreshBackground || game.canvasResized) {
+            if (game.canvasResized) {
+                game.backgroundCanvas.width = game.canvasWidth;
+                game.foregroundCanvas.width = game.canvasWidth;
+
+                // ensure the resizing doesn't cause the map to pan out of bounds
+                if (game.offsetX + game.canvasWidth > game.currentMapImage.width) {
+                    game.offsetX = game.currentMapImage.width - game.canvasWidth;
+                }
+
+                if (game.offsetY + game.canvasHeight > game.currentMapImage.height) {
+                    game.offsetY = game.currentMapImage.height - game.canvasHeight;
+                }
+
+                game.canvasResized = false;                
+            }
+
             game.backgroundContext.drawImage(game.currentMapImage,
                 game.offsetX, game.offsetY,
                 game.canvasWidth, game.canvasHeight,
@@ -129,6 +227,7 @@ var game = {
         //     game.canvasHeight
         // );
 
+        /*
         // fast way to clear the foreground canvas
         game.foregroundCanvas.width = game.foregroundCanvas.width;
 
@@ -148,8 +247,55 @@ var game = {
         if (game.running) {
             requestAnimationFrame(game.drawingLoop);
         }
+        */
     },
 
+    handlePanning: function() {
+        // do not pan if mouse leaves the canvas
+        if (!mouse.insideCanvas) {
+            return;
+        }
+
+        if (mouse.x <= game.panningThreshold) {
+            // mouse is at the left edge of the game area. pan to the left.
+            let panDistance = game.offsetX;
+            if (panDistance > 0) {
+                game.offsetX -= Math.min(panDistance, game.maximumPanDistance);
+                game.refreshBackground = true;                
+            }
+        } else if (mouse.x >= game.canvasWidth - game.panningThreshold) {
+            // mouse is at the right edge of the game area. Pan to the right.
+            let panDistance = game.currentMapImage.width - game.canvasWidth - game.offsetX;
+
+            if (panDistance > 0) {                
+                game.offsetX += Math.min(panDistance, game.maximumPanDistance);
+                game.refreshBackground = true;
+            }
+        }
+
+        if (mouse.y <= game.panningThreshold) {
+            // mouse is at the top edge of the game area. pan upwards.
+            let panDistance = game.offsetY;
+            if (panDistance > 0) {                
+                game.offsetY -= Math.min(panDistance, game.maximumPanDistance);
+                game.refreshBackground = true;
+            }
+        } else if (mouse.y >= game.canvasHeight - game.panningThreshold) {
+            // mouse is at the bottom edge of the game area. pan downwards.
+            let panDistance = game.currentMapImage.height - game.offsetY - game.canvasHeight;
+            if (panDistance > 0) {                
+                game.offsetY += Math.min(panDistance, game.maximumPanDistance);
+                game.refreshBackground = true;
+            }
+        }
+
+        if (game.refreshBackground) {
+            // update mouse game coordinates based on game offsets
+            mouse.calculateGameCoordinates();
+        }
+    },
+
+    /*
     drawObstructedSquares: function() {
         if (!game.currentMapPassableGrid) {
             return;
@@ -167,41 +313,6 @@ var game = {
                         game.gridSize, game.gridSize);
                 }
             }
-        }
-    },
-
-    handlePanning: function() {
-        if (!mouse.insideCanvas) {
-            return;
-        }
-
-        if (mouse.x <= game.panningThreshold) {
-            if (game.offsetX >= game.panningSpeed) {
-                game.refreshBackground = true;
-                game.offsetX -= game.panningSpeed;
-            }
-        } else if (mouse.x >= game.canvasWidth - game.panningThreshold) {
-            if (game.offsetX + game.canvasWidth + game.panningSpeed <= game.currentMapImage.width) {
-                game.refreshBackground = true;
-                game.offsetX += game.panningSpeed;
-            }
-        }
-
-        if (mouse.y <= game.panningThreshold) {
-            if (game.offsetY >= game.panningSpeed) {
-                game.refreshBackground = true;
-                game.offsetY -= game.panningSpeed;
-            }
-        } else if (mouse.y >= game.canvasHeight - game.panningThreshold) {
-            if (game.offsetY + game.canvasHeight + game.panningSpeed <= game.currentMapImage.height) {
-                game.refreshBackground = true;
-                game.offsetY += game.panningSpeed;
-            }
-        }
-
-        if (game.refreshBackground) {
-            // update mouse game coordinates based on game offsets
-            mouse.calculateGameCoordinates();
         }
     },
 
@@ -348,4 +459,16 @@ var game = {
             }
         }
     },
-}
+    */
+};
+
+// initialize and resize the game once page has fully loaded
+window.addEventListener("load", function() {
+    game.resize();
+    game.init();
+}, false);
+
+// resize the game any time the window is resized
+window.addEventListener("resize", function() {
+    game.resize();
+});

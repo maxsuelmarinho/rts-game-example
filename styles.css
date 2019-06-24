@@ -1,17 +1,209 @@
+body {
+    background: #090009;
+    /* Disable scroll bars */
+    overflow: hidden;
+
+    /* Disable long touch hold select on mobile browsers */
+    -webkit-touch-callout: none !important;
+}
+
+#wrapper {
+    position: absolute;
+
+    /* wrapper covers entire window height and width */
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    /* Prevent the ugly blue highlighting from accidental selection of text */
+    user-select: none;
+}
+
 #gamecontainer {
+    /* Start with a default width that we can change later */
     width: 640px;
     height: 480px;
-    background: url(images/splashscreen.png);
-    border: 1px solid black;
+
+    /* use a wider splash screen and center it within the container */    
+    background: url("images/screens/splashscreen.png");
+    background-position: center;
+    background-repeat: no-repeat;
+
+    /* Center the game container relative to outer wrapper */
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    transform-origin: center center;
 }
 
 .gamelayer {
-    width: 640px;
-    height: 480px;
+    width: 100%;
+    height: 100%;
     position: absolute;
     display: none;
 }
 
+.game-title {
+    position: absolute;
+    top: 5%;
+    right: 5%;
+    text-align: right;
+    width: 100%;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 90px;
+    line-height: 80px;
+    color: white;
+    text-shadow: -2px 0 purple, 0 2px purple, 2px 0 purple, 0 -2px purple;
+}
+
+.game-option {
+    position: relative;
+    top: 65%;
+    left: 10%;
+    display: block;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 48px;
+    color: white;
+    text-shadow: -2px 0 purple, 0 2px purple, 2px 0 purple, 0 -2px purple;
+    cursor: pointer;
+}
+
+.game-option:hover {
+    color: yellow;
+}
+
+#loadingscreen {
+    background: rgba(100, 100, 100, 0.7);    
+}
+
+#loadingmessage {
+    position: relative;
+    top: 400px;
+    text-align: center;
+    height: 48px;
+    color: white;
+    background: url("images/loader.gif") no-repeat center;
+    font: 12px Arial;
+}
+
+/* mission briefing screen */
+#missionbriefingscreen {
+    background: url("images/screens/interface-middle.png");
+}
+
+input[type="button"] {
+    border-width: 0;
+    outline: none;
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-image: url("images/buttons.png");
+    cursor: pointer;
+}
+
+.left-panel {
+    left: 0;
+    top: 0;
+    position: absolute;
+}
+
+.right-panel {
+    right: 0;
+    top: 0;
+    position: absolute;
+}
+
+#entermission {
+    width: 188px;
+    height: 52px;
+    position: absolute;
+    top: 82px;
+    left: 3px;
+    background-position: -4px -4px;
+}
+
+#entermission:disabled, #entermission:active {
+    background-position: -196px -4px;
+}
+
+#exitmission {
+    width: 72px;
+    height: 52px;
+    position: absolute;
+    top: 82px;
+    right: 164px;
+    background-position: -4px -64px;
+}
+
+#exitmission:disabled, #exitmission:active {
+    background-position: -84px -64px;
+}
+
+#missionbriefing {
+    position: absolute;
+    top: 170px;
+    left: 40px;
+    right: 220px;
+    height: 270px;
+    text-align: justify;
+    color: rgb(130, 150, 162);
+    text-shadow: -1px 1px black;
+    font-size: 16px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+/* game interface screen */
+#gameinterfacescreen {
+    background: url("images/screens/interface-middle.png")
+}
+
+#gameinterfacescreen #gamemessages {
+    position: absolute;
+    padding: 5px;
+    top: 4px;
+    left: 5px;
+    right: 168px;
+    height: 60px;
+    color: rgb(130, 150, 162);
+    overflow: hidden;
+    font-size: 13px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+#gamemessages span {
+    color: white;
+}
+
+#callerpicture {
+    position: absolute;
+    width: 114px;
+    height: 72px;
+    right: 20px;
+    top: 155px;
+    overflow: hidden;
+}
+
+#cash {
+    width: 120px;
+    height: 22px;
+    position: absolute;
+    right: 20px;
+    top: 241px;
+    color: rgb(130, 150, 162);
+    overflow: hidden;
+    font-size: 14px;
+    font-family: 'Courier New', Courier, monospace;
+    text-align: right;
+}
+
+#gameinterfacescreen canvas {
+    position: absolute;
+    top: 79px;
+    left: 0;
+}
+
+/*
 #gamestartscreen {
     padding-top: 320px;
     text-align: left;
@@ -20,32 +212,18 @@
     height: 160px;
 }
 
-#gamestartscreen span {
-    margin: 20px;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 48px;
-    cursor: pointer;
-    color: white;
-    text-shadow: -2px 0 purple, 0 2px purple, 2px 0 purple, 0 -2px purple;
-}
+//#gamestartscreen span {
+//    margin: 20px;
+//    font-family: 'Courier New', Courier, monospace;
+//    font-size: 48px;
+//    cursor: pointer;
+//    color: white;
+//    text-shadow: -2px 0 purple, 0 2px purple, 2px 0 purple, 0 -2px purple;
+//}
 
-#gamestartscreen span:hover {
-    color: yellow;
-}
-
-#loadingscreen {
-    background: rgba(100, 100, 100, 0.7);
-    z-index: 10;
-}
-
-#loadingmessage {
-    margin-top: 400px;
-    text-align: center;
-    height: 48px;
-    color: white;
-    background: url(images/loader.gif) no-repeat center;
-    font: 12px Arial;
-}
+//#gamestartscreen span:hover {
+//    color: yellow;
+//}
 
 #missionscreen {
     background: url(images/missionscreen.png) no-repeat;
@@ -150,8 +328,10 @@
 #gameinterfacescreen #backgroundcanvas {
     z-index: 0;
 }
+*/
 
 /* sidebar buttons */
+/*
 #gameinterfacescreen #sidebarbuttons {
 	position: absolute;
 	left: 500px;
@@ -168,8 +348,9 @@
 	padding: 0px;
 	background-image: url(images/buttons.png);
 }
-
+*/
 /* grayed out state for buttons */
+/*
 #starportbutton:active, #starportbutton:disabled {
 	background-position: -2px -305px;
 }
@@ -205,8 +386,9 @@
 #wraithbutton:active, #wraithbutton:disabled {
 	background-position: -102px -387px;
 }
-
+*/
 /* regular state for buttons */
+/*
 #starportbutton {
 	background-position: -167px -305px;
 }
@@ -242,3 +424,4 @@
 #wraithbutton {
 	background-position: -264px -387px;
 }
+*/
