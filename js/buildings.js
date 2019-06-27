@@ -2,23 +2,31 @@ var buildings = {
     list: {
         "base": {
             name: "base",
+            // properties for drawing the object
+            // dimensions of the individual sprite
             pixelWidth: 60,
             pixelHeight: 60,
+            // dimensions of the base area
             baseWidth: 40,
             baseHeight: 40,
+            // offset of the base area from the top-left corner of the sprite
             pixelOffsetX: 0,
             pixelOffsetY: 20,
 
+            // grid squares necessary for constructing the building
             buildableGrid: [
                 [1, 1],
                 [1, 1]
             ],
 
+            // grid squares that are passable or obstructured for pathfinding
             passableGrid: [
                 [1, 1],
                 [1, 1]
             ],
+            // how far the building can "see" through fog of war
             sight: 3,
+            // maximum possible life
             hitPoints: 500,
             cost: 5000,
             spriteImages: [
@@ -28,6 +36,7 @@ var buildings = {
             ],
         },
 
+        /*
         "starport": {
             name: "starport",
             pixelWidth: 40,
@@ -162,10 +171,52 @@ var buildings = {
             directions: 8, // total of 8 turret directions allowed (0-7)
             orders: { type: "guard" }
         }
+        */
     },
 
     defaults: {
         type: "buildings",
+
+        processActions: function() {
+            switch(this.action) {
+                case "stand":
+                    this.imageList = this.spriteArray[this.lifeCode];
+                    this.imageOffset = this.imageList.offset + this.animationIndex;
+                    this.animationIndex++;
+                    if (this.animationIndex >= this.imageList.count) {
+                        this.animationIndex = 0;
+                    }
+                    break;
+                case "construct":
+                    this.imageList = this.spriteArray["constructing"];
+                    this.imageOffset = this.imageList.offset + this.animationIndex;
+                    this.animationIndex++;
+                    // once constructing is complete go back to standing
+                    if (this.animationIndex >= this.imageList.count) {
+                        this.animationIndex = 0;
+                        this.action = "stand";
+                    }
+                    break;
+            }
+        },
+
+        // default function for drawing a building
+        drawSprite: function() {
+            let x = this.drawingX;
+            let y = this.drawingY;
+            // all sprite sheets will have blue in the first row and green in the second row
+            let colorIndex = (this.team === "blue") ? 0 : 1;
+            let colorOffset = colorIndex * this.pixelHeight;
+
+            // draw the sprite at x, y
+            game.foregroundContext.drawImage(this.spriteSheet, 
+                this.imageOffset * this.pixelWidth, colorOffset, 
+                this.pixelWidth, this.pixelHeight,
+                x, y,
+                this.pixelWidth, this.pixelHeight);
+        },
+
+        /*
         animationIndex: 0,
         direction: 0,
         orders: { type: "stand" },
@@ -323,9 +374,10 @@ var buildings = {
             game.foregroundContext.fillRect(x - 1, y - 1, this.baseWidth + 2, this.baseHeight + 2);
             game.foregroundContext.strokeRect(x - 1, y - 1, this.baseWidth + 2, this.baseHeight + 2);
         },
+        */
     },
 
     load: loadItem,
 
     add: addItem,
-}
+};

@@ -117,6 +117,26 @@ var game = {
 
         // load all the assets for the level starting with the map image
         game.currentMapImage = loader.loadImage("images/maps/" + maps[level.mapName].mapImage);
+
+        // initialize all the arrays for the game
+        game.resetArrays();
+
+        // load all the assets for every entity defined in the level requirements array
+        for (let type in level.requirements) {
+            let requirementArray = level.requirements[type];
+            requirementArray.forEach(function(name) {
+                if(window[type] && typeof window[type].load === "function") {
+                    window[type].load(name);
+                } else {
+                    console.log("Could not load type: ", type);
+                }
+            });
+        }
+
+        // add all the items defined in the level items array to the game
+        level.items.forEach(function(itemDetails) {
+            game.add(itemDetails);
+        });
     },
 
     start: function() {
@@ -133,6 +153,17 @@ var game = {
 
     // the animation loop will run at a fixed interval (100ms)
     animationLoop: function() {
+        // animate each of the elements within the game
+        game.items.forEach(function(item) {
+            item.animate();
+        });
+
+        // sort game items into a sortedItems array based on their x, y coordinates
+        game.sortedItems = Object.assign([], game.items);
+        game.sortedItems.sort(function(a, b) {
+            return a.y - b.y + ((a.y === b.y) ? (b.x - a.x) : 0);
+        });
+
         /*
         // animate the sidebar
         sidebar.animate();
@@ -159,12 +190,20 @@ var game = {
     },
 
     // run as often as the browser allows
-    drawingLoop: function() {
+    drawingLoop: function() {        
         // pan the map if the cursor is near the edge of the canvas
         game.handlePanning();
         
         // draw the background whenever necessary
         game.drawBackground();
+
+        // clear the foreground canvas
+        game.foregroundContext.clearRect(0, 0, game.canvasWidth, game.canvasHeight);
+
+        // start drawing the foreground elements
+        game.sortedItems.forEach(function(item) {
+            item.draw();
+        });
 
         // call the drawing loop for the next frame using request animation frame
         if (game.running) {
@@ -295,6 +334,81 @@ var game = {
         }
     },
 
+    resetArrays: function() {
+        // count items added in game, to assign them a unique id
+        game.counter = 0;
+
+        // track all the items currently in the game
+        game.items = [];
+        game.buildings = [];
+        game.vehicles = [];
+        game.aircraft = [];
+        game.terrain = [];
+        game.selectedItems = [];
+        
+        /*
+        game.triggeredEvents = [];        
+        game.sortedItems = [];
+        */
+    },
+
+    add: function(itemDetails) {
+        // set a unique id for the item
+        if (!itemDetails.uid) {
+            itemDetails.uid = ++game.counter;
+        }
+
+        var item = window[itemDetails.type].add(itemDetails);
+
+        // add the item to the items array
+        game.items.push(item);
+        
+        // add the item to the type specific array
+        game[item.type].push(item);
+
+        /*
+        if (item.type == "buildings" || item.type == "terrain") {
+            game.currentMapPassableGrid = undefined;
+        }
+        */
+
+        return item;
+    },
+
+    remove: function(item) {
+        // unselect item if it is selected
+        item.selected = false;
+        for (let i = game.selectedItems.length - 1; i >= 0; i--) {
+            if (game.selectedItems[i].uid === item.uid) {
+                game.selectedItems.splice(i, 1);
+                break;
+            }
+
+        }
+
+        // remove item from the items array
+        for (let i = game.items.length - 1; i >= 0; i--) {
+            if (game.items[i].uid == item.uid) {
+                game.items.splice(i, 1);
+                break;
+            }
+        }
+
+        // remove items from the type specific array
+        for (var i = game[item.type].length - 1; i >= 0; i--) {
+            if (game[item.type][i].uid == item.uid) {
+                game[item.type].splice(i, 1);
+                break;
+            }
+        }
+
+        /*
+        if (item.type == "buildings" || item.type == "terrain") {
+            game.currentMapPassableGrid = undefined;
+        }
+        */
+    },
+
     /*
     drawObstructedSquares: function() {
         if (!game.currentMapPassableGrid) {
@@ -314,70 +428,7 @@ var game = {
                 }
             }
         }
-    },
-
-    resetArrays: function() {
-        game.counter = 1;
-        game.items = [];
-        game.sortedItems = [];
-        game.buildings = [];
-        game.vehicles = [];
-        game.aircraft = [];
-        game.terrain = [];
-        game.triggeredEvents = [];
-        game.selectedItems = [];
-        game.sortedItems = [];
-    },
-
-    add: function(itemDetails) {
-        if (!itemDetails.uid) {
-            itemDetails.uid = game.counter++;
-        }
-
-        var item = window[itemDetails.type].add(itemDetails);
-        game.items.push(item);
-        
-        // add the item to the type specific array
-        game[item.type].push(item);
-
-        if (item.type == "buildings" || item.type == "terrain") {
-            game.currentMapPassableGrid = undefined;
-        }
-
-        return item;
-    },
-
-    remove: function(item) {
-        // unselect item if it is selected
-        item.selected = false;
-        for (var i = game.selectedItems.length - i; i >= 0; i--) {
-            if (game.selectedItems[i].uid == item.uid) {
-                game.selectedItems.splice(i, 1);
-                break;
-            }
-
-        }
-
-        // remove item from the items array
-        for (var i = game.items.length - 1; i >= 0; i--) {
-            if (game.items[i].uid == item.uid) {
-                game.items.splice(i, 1);
-                break;
-            }
-        }
-
-        // remove items from the type specific array
-        for (var i = game[item.type].length - 1; i >= 0; i--) {
-            if (game[item.type][i].uid == item.uid) {
-                game[item.type].splice(i, 1);
-                break;
-            }
-        }
-
-        if (item.type == "buildings" || item.type == "terrain") {
-            game.currentMapPassableGrid = undefined;
-        }
-    },
+    },    
 
     clearSelection: function() {
         while(game.selectedItems.length > 0) {

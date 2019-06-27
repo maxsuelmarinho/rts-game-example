@@ -16,8 +16,42 @@ var levels = {
             "name": "Introduction",
             "briefing": "In this level you will learn how to pan across the map.\n\nDon't worry! We will be implementing more features soon.",
             "mapName": "plains",
+            // starting location for player
             "startX": 4,
             "startY": 4,
+            // entities to be loaded
+            "requirements": {
+                "buildings": ["base"],
+                "vehicles": [],
+                "aircraft": [],
+                "terrain": []
+            },
+
+            // entities to be added
+            "items": [
+                {
+                    "type": "buildings",
+                    "name": "base",
+                    "x": 11,
+                    "y": 14,
+                    "team": "blue"
+                },
+                {
+                    "type": "buildings",
+                    "name": "base",
+                    "x": 12,
+                    "y": 16,
+                    "team": "green"
+                },
+                {
+                    "type": "buildings",
+                    "name": "base",
+                    "x": 15,
+                    "y": 15,
+                    "team": "green",
+                    "life": 50
+                }
+            ]
         }
     
     ],

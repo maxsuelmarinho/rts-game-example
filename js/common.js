@@ -102,10 +102,12 @@ var loader = {
     },
 };
 
+// the default load() method used by all our game entities
 function loadItem(name) {
     console.log("loadItem", name);
     var item = this.list[name];
 
+    // if the sprite array has already been loaded, then no need to do it again
     if (item.spriteArray) {
         return;
     }
@@ -114,13 +116,13 @@ function loadItem(name) {
     item.spriteArray = [];
     item.spriteCount = 0;
 
-    for (var i = 0; i < item.spriteImages.length; i++) {
-        var constructImageCount = item.spriteImages[i].count;
-        var constructDirectionCount = item.spriteImages[i].directions;
+    item.spriteImages.forEach(function(spriteImage) {
+        let constructImageCount = spriteImage.count;
+        let constructDirectionCount = spriteImage.directions;
 
         if (constructDirectionCount) {
-            for (var j = 0; j < constructDirectionCount; j++) {
-                var constructImageName = item.spriteImages[i].name + '-' + j;
+            for (let i = 0; i < constructDirectionCount; i++) {
+                var constructImageName = spriteImage.name + '-' + i;
                 item.spriteArray[constructImageName] = {
                     name: constructImageName,
                     count: constructImageCount,
@@ -130,7 +132,8 @@ function loadItem(name) {
                 item.spriteCount += constructImageCount;
             }
         } else {
-            var constructImageName = item.spriteImages[i].name;
+            // if the spriteImage has no directions, store just the name and image count in spriteArray
+            let constructImageName = spriteImage.name;
             item.spriteArray[constructImageName] = {
                 name: constructImageName,
                 count: constructImageCount,
@@ -139,20 +142,93 @@ function loadItem(name) {
 
             item.spriteCount += constructImageCount;
         }
-    }
+    });        
 }
 
-function addItem(details) {
-    var item = {};
+// Polyfill for a few browsers that still do not support Object.assign
+if (typeof Object.assign !== "function") {
+    Object.assign = function(target, varArgs) { // .length of function is 2
+        "use strict";
+        if (target === null) { // TypeError if undefined or null
+            throw new TypeError("Cannot convert undefined or null object");
+        }
+
+        var to = Object(target);
+        for (var index = 1; index < arguments.length; index++) {
+            var nextSource = arguments[index];
+            if (nextSource != null) { // skip over if undefined or null
+                for (var nextKey in nextSource) {
+                    // avoid bugs when hasOwnProperty is shadowed
+                    if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
+                        to[nextKey] = nextSource[nextKey];
+                    }
+                }
+            }
+        }
+
+        return to;
+    };
+}
+
+// the default add() method used by all our game entities
+function addItem(details) {    
     var name = details.name;
-    $.extend(item, this.defaults);
-    $.extend(item, this.list[name]);
+
+    // initialize the item with any default properties the item should have
+    var item = Object.assign({}, baseItem);
+    // assign the item all the default properties for its category type
+    Object.assign(item, this.defaults);
+    // assign item properties based on the item name
+    Object.assign(item, this.list[name]);
+
+    // by default, set the item's life to its maximum hit points
     item.life = item.hitPoints;
-    $.extend(item, details);
+
+    // override item defaults based on details
+    Object.assign(item, details);
     
     return item;
 }
 
+// default properties that every item should have
+var baseItem = {
+    animationIndex: 0,
+    direction: 0,
+    selected: false,
+    selectable: true,
+    orders: { type: "stand" },
+    action: "stand",
+
+    // default method for animating an item
+    animate: function() {
+        // check the health of the item
+        if (this.life > this.hitPoints * 0.4) {
+            // consider item healthy if it has more than 40% life
+            this.lifeCode = "healthy";
+        } else if (this.life > 0) {
+            // consider item damaged if it has less than 40% life
+            this.lifeCode = "damaged";
+        } else {
+            // remove item from the game if it has died (life is 0 or negative)
+            this.lifeCode = "dead";
+            game.remove(this);
+            return;
+        }
+
+        // process the current action
+        this.processActions();
+    },
+
+    // default method for drawing an item
+    draw: function() {
+        // compute pixel coordinates on canvas for drawing item
+        this.drawingX = (this.x * game.gridSize) - game.offsetX - this.pixelOffsetX;
+        this.drawingY = (this.y * game.gridSize) - game.offsetY - this.pixelOffsetY;
+        this.drawSprite();
+    },
+};
+
+/*
 // finds the angle between two objects in terms of a direction
 // where 0 <= angle < directions
 function findAngle(object, unit, directions) {
@@ -202,3 +278,4 @@ function wrapDirection(direction, directions) {
 
     return direction;
 }
+*/
