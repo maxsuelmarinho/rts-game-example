@@ -21,7 +21,7 @@ var levels = {
             "startY": 4,
             // entities to be loaded
             "requirements": {
-                "buildings": ["base"],
+                "buildings": ["base", "starport"],
                 "vehicles": [],
                 "aircraft": [],
                 "terrain": []
@@ -50,7 +50,31 @@ var levels = {
                     "y": 15,
                     "team": "green",
                     "life": 50
-                }
+                },
+                
+                {
+                    "type": "buildings",
+                    "name": "starport",
+                    "x": 18,
+                    "y": 14,
+                    "team": "blue"
+                },
+                {
+                    "type": "buildings",
+                    "name": "starport",
+                    "x": 18,
+                    "y": 10,
+                    "team": "blue",
+                    "action": "teleport"
+                },
+                {
+                    "type": "buildings",
+                    "name": "starport",
+                    "x": 18,
+                    "y": 6,
+                    "team": "green",
+                    "action": "open"
+                },
             ]
         }
     

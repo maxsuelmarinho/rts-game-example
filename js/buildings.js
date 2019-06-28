@@ -35,8 +35,7 @@ var buildings = {
                 { name: "constructing", count: 3 },
             ],
         },
-
-        /*
+        
         "starport": {
             name: "starport",
             pixelWidth: 40,
@@ -57,6 +56,7 @@ var buildings = {
             ],
             sight: 3,
             cost: 2000,
+            canConstruct: true,
             hitPoints: 300,
             spriteImages: [
                 {name: "teleport", count: 9},
@@ -65,6 +65,7 @@ var buildings = {
                 { name: "damaged", count: 1 },
             ],
 
+            /*
             processOrders: function() {
                 switch (this.orders.type) {
                     case "construct-unit":
@@ -114,7 +115,10 @@ var buildings = {
                         break;
                 }
             },
+            */
         },
+
+        /*
 
         "harvester": {
             name: "harvester",
@@ -195,6 +199,40 @@ var buildings = {
                     if (this.animationIndex >= this.imageList.count) {
                         this.animationIndex = 0;
                         this.action = "stand";
+                    }
+                    break;
+                case "teleport":
+                    this.imageList = this.spriteArray["teleport"];
+                    this.imageOffset = this.imageList.offset + this.animationIndex;
+                    this.animationIndex++;
+
+                    // once teleporting is complete, move to stand mode
+                    if (this.animationIndex >= this.imageList.count) {
+                        this.animationIndex = 0;
+                        this.action = "stand";
+                    }
+                    break;
+                case "close":
+                    this.imageList = this.spriteArray["closing"];
+                    this.imageOffset = this.imageList.offset + this.animationIndex;
+                    this.animationIndex++;
+
+                    // once closing is complete, go back to standing
+                    if (this.animationIndex >= this.imageList.count) {
+                        this.animationIndex = 0;
+                        this.action = "stand";
+                    }
+                    break;
+                case "open":
+                    this.imageList = this.spriteArray["closing"];
+                    // opening is just the closing sprites running backward
+                    this.imageOffset = this.imageList.offset + this.imageList.count - this.animationIndex;
+                    this.animationIndex++;
+
+                    // once opening is complete, go back to close
+                    if (this.animationIndex >= this.imageList.count) {
+                        this.animationIndex = 0;
+                        this.action = "close";
                     }
                     break;
             }
