@@ -63,7 +63,7 @@ var buildings = {
                 { name: "closing", count: 18 },
                 { name: "healthy", count: 4 },
                 { name: "damaged", count: 1 },
-            ],
+            ],            
 
             /*
             processOrders: function() {
@@ -118,8 +118,6 @@ var buildings = {
             */
         },
 
-        /*
-
         "harvester": {
             name: "harvester",
             pixelWidth: 40,
@@ -160,6 +158,7 @@ var buildings = {
             ],
             sight: 5,
             cost: 1500,
+            canConstruct: true,
             hitPoints: 200,
             spriteImages: [
                 { name: "teleport", count: 9 },
@@ -170,12 +169,11 @@ var buildings = {
             canAttackLand: true,
             canAttackAir: false,
             weaponType: "cannon-ball",
-            action: "guard",
+            action: "stand",
             direction: 0, // 0: face upward
             directions: 8, // total of 8 turret directions allowed (0-7)
             orders: { type: "guard" }
         }
-        */
     },
 
     defaults: {
@@ -184,7 +182,15 @@ var buildings = {
         processActions: function() {
             switch(this.action) {
                 case "stand":
-                    this.imageList = this.spriteArray[this.lifeCode];
+                    if (this.name === "ground-turret" && this.lifeCode === "healthy") {
+                        // for a healthy turret, use direction to choose image list
+                        let direction = Math.round(this.direction) % this.directions;
+                        this.imageList = this.spriteArray[this.lifeCode + "-" + direction];
+                    } else {
+                        // in all other cases, use lifeCode
+                        this.imageList = this.spriteArray[this.lifeCode];
+                    }
+                    
                     this.imageOffset = this.imageList.offset + this.animationIndex;
                     this.animationIndex++;
                     if (this.animationIndex >= this.imageList.count) {
@@ -234,6 +240,18 @@ var buildings = {
                         this.animationIndex = 0;
                         this.action = "close";
                     }
+                    break;
+                case "deploy":
+                    this.imageList = this.spriteArray["deploy"];
+                    this.imageOffset = this.imageList.offset + this.animationIndex;
+                    this.animationIndex++;
+
+                    // once deploying is complete, go to stand
+                    if (this.animationIndex >= this.imageList.count) {
+                        this.animationIndex = 0;
+                        this.action = "stand";
+                    }
+
                     break;
             }
         },

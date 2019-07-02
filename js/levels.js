@@ -21,7 +21,7 @@ var levels = {
             "startY": 4,
             // entities to be loaded
             "requirements": {
-                "buildings": ["base", "starport"],
+                "buildings": ["base", "starport", "harvester", "ground-turret"],
                 "vehicles": [],
                 "aircraft": [],
                 "terrain": []
@@ -52,6 +52,7 @@ var levels = {
                     "life": 50
                 },
                 
+                /* Starport */
                 {
                     "type": "buildings",
                     "name": "starport",
@@ -74,6 +75,49 @@ var levels = {
                     "y": 6,
                     "team": "green",
                     "action": "open"
+                },
+
+                /* Harvester */
+                {
+                    "type": "buildings",
+                    "name": "harvester",
+                    "x": 20,
+                    "y": 10,
+                    "team": "blue"
+                },
+                {
+                    "type": "buildings",
+                    "name": "harvester",
+                    "x": 22,
+                    "y": 12,
+                    "team": "green",
+                    "action": "deploy"
+                },
+
+                /* Ground-turret */
+                {
+                    "type": "buildings",
+                    "name": "ground-turret",
+                    "x": 14,
+                    "y": 9,
+                    "team": "blue",
+                    "direction": 3
+                },
+                {
+                    "type": "buildings",
+                    "name": "ground-turret",
+                    "x": 14,
+                    "y": 12,
+                    "team": "green",
+                    "direction": 1
+                },
+                {
+                    "type": "buildings",
+                    "name": "ground-turret",
+                    "x": 16,
+                    "y": 10,
+                    "team": "blue",
+                    "action": "teleport"
                 },
             ]
         }
