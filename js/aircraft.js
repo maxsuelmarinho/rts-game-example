@@ -8,12 +8,13 @@ var aircraft = {
             pixelOffsetY: 20,
             radius: 18,
             speed: 25,
-            sight: 4,
+            sight: 6,
             cost: 900,
+            canConstruct: true,
             hitPoints: 50,
             turnSpeed: 4,
             spriteImages: [
-                { name: "fly", count: 4, directions: 8 }
+                { name: "stand", count: 4, directions: 8 }
             ],
             weaponType: "heatseeker",
             canAttack: true,
@@ -31,10 +32,11 @@ var aircraft = {
             speed: 40,
             sight: 8,
             cost: 600,
+            canConstruct: true,
             hitPoints: 50,
             turnSpeed: 4,
             spriteImages: [
-                { name: "fly", count: 1, directions: 8 }
+                { name: "stand", count: 1, directions: 8 }
             ],
             weaponType: "fireball",
             canAttack: true,
@@ -46,9 +48,51 @@ var aircraft = {
 
     defaults: {
         type: "aircraft",
-        animationIndex: 0,
-        direction: 0,
         directions: 8,
+        canMove: true,
+
+        processActions: function() {
+            let direction = Math.round(this.direction) % this.directions;
+            switch(this.action) {
+                case "stand":
+                    this.imageList = this.spriteArray["stand-" + direction];
+                    this.imageOffset = this.imageList.offset + this.animationIndex;
+                    this.animationIndex++;
+                    if (this.animationIndex >= this.imageList.count) {
+                        this.animationIndex = 0;
+                    }
+
+                    break;
+            }
+        },
+
+        drawSprite: function() {
+            let x = this.drawingX;
+            let y = this.drawingY;
+            let colorIndex = this.team === "blue" ? 0 : 1;
+            let colorOffset = colorIndex * this.pixelHeight;
+
+            // the aircraft shadow is on the third row of the sprite sheet
+            let shadowOffset = this.pixelHeight * 2;
+
+            // draw the aircraft pixelShadowHeight pixels above its position
+            game.foregroundContext.drawImage(this.spriteSheet, 
+                this.imageOffset * this.pixelWidth, colorOffset,
+                this.pixelWidth, this.pixelHeight,
+                x, y - this.pixelShadowHeight,
+                this.pixelWidth, this.pixelHeight);
+
+            // draw the shadow at aircraft position
+            game.foregroundContext.drawImage(this.spriteSheet, 
+                this.imageOffset * this.pixelWidth, shadowOffset,
+                this.pixelWidth, this.pixelHeight,
+                x, y,
+                this.pixelWidth, this.pixelHeight);
+        },
+        
+        /*
+        animationIndex: 0,
+        direction: 0,        
         action: "fly",
         selected: false,
         selectable: true,
@@ -202,6 +246,7 @@ var aircraft = {
                 this.y = this.y + this.lastMovementY;
             }
         }
+        */
     },
 
     load: loadItem,

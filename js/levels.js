@@ -23,7 +23,7 @@ var levels = {
             "requirements": {
                 "buildings": ["base", "starport", "harvester", "ground-turret"],
                 "vehicles": ["transport", "harvester", "scout-tank", "heavy-tank"],
-                "aircraft": [],
+                "aircraft": ["chopper", "wraith"],
                 "terrain": []
             },
 
@@ -183,6 +183,24 @@ var levels = {
                     "y": 16,
                     "team": "green",
                     "direction": 0
+                },
+
+                /* Aircraft */
+                {
+                    "type": "aircraft",
+                    "name": "chopper",
+                    "x": 20,
+                    "y": 22,
+                    "team": "blue",
+                    "direction": 2
+                },
+                {
+                    "type": "aircraft",
+                    "name": "wraith",
+                    "x": 23,
+                    "y": 22,
+                    "team": "green",
+                    "direction": 3
                 },
             ]
         }
