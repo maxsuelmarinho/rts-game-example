@@ -11,7 +11,7 @@ var vehicles = {
             sight: 3,
             cost: 400,
             hitPoints: 100,
-            turnSpeed: 2,
+            turnSpeed: 3,
             spriteImages: [
                 { name: "stand", count: 1, directions: 8 }
             ],
@@ -27,8 +27,9 @@ var vehicles = {
             speed: 10,
             sight: 3,
             cost: 1600,
+            canConstruct: true,
             hitPoints: 50,
-            turnSpeed: 2,
+            turnSpeed: 3,
             spriteImages: [
                 { name: "stand", count: 1, directions: 8 }
             ]
@@ -42,10 +43,11 @@ var vehicles = {
             pixelOffsetY: 10,
             radius: 11,
             speed: 20,
-            sight: 3,
+            sight: 4,
             cost: 500,
+            canConstruct: true,
             hitPoints: 50,
-            turnSpeed: 4,
+            turnSpeed: 5,
             canAttack: true,
             canAttackLand: true,
             canAttackAir: false,
@@ -63,8 +65,9 @@ var vehicles = {
             pixelOffsetY: 15,
             radius: 13,
             speed: 15,
-            sight: 4,
+            sight: 5,
             cost: 1200,
+            canConstruct: true,
             hitPoints: 50,
             turnSpeed: 4,
             canAttack: true,
@@ -77,15 +80,47 @@ var vehicles = {
         },
     },
 
-    "defaults": {
+    defaults: {
         type: "vehicles",
+        directions: 8,
+        canMove: true,
+
+        processActions: function() {
+            let direction = Math.round(this.direction) % this.directions;
+            switch(this.action) {
+                case "stand":
+                    this.imageList = this.spriteArray["stand-" + direction];
+                    this.imageOffset = this.imageList.offset + this.animationIndex;
+                    this.animationIndex++;
+                    if (this.animationIndex >= this.imageList.count) {
+                        this.animationIndex = 0;
+                    }
+                    break;
+            }
+        },
+
+        // defualt function for drawing a vehicle
+        drawSprite: function() {
+            let x = this.drawingX;
+            let y = this.drawingY;
+            let colorIndex = this.team === "blue" ? 0 : 1;
+            let colorOffset = colorIndex * this.pixelHeight;
+
+            game.foregroundContext.drawImage(this.spriteSheet, 
+                this.imageOffset * this.pixelWidth, colorOffset,
+                this.pixelWidth, this.pixelHeight,
+                x, y,
+                this.pixelWidth, this.pixelHeight);
+        },
+        
+        /*
         animationIndex: 0,
         direction: 0,
         action: "stand",
         orders: { type: "stand" },
         selected: false,
         selectable: true,
-        directions: 8,
+        
 
         animate: function() {
             if (this.life > this.hitPoints * 0.4) {
@@ -474,9 +509,10 @@ var vehicles = {
 
             return collisionObjects;
         },
+        */
     },
 
     load: loadItem,
 
     add: addItem
-}
+};
