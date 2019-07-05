@@ -19,7 +19,7 @@ var terrain = {
             
             spriteImages: [
                 { name: "hint", count: 1 },
-                { name: "default", count: 1 }
+                { name: "stand", count: 1 }
             ],
         },
 
@@ -43,7 +43,7 @@ var terrain = {
             ],
 
             spriteImages: [
-                { name: "default", count: 1 }
+                { name: "stand", count: 1 }
             ],
         },
 
@@ -65,17 +65,43 @@ var terrain = {
             ],
 
             spriteImages: [
-                { name: "default", count: 1 }
+                { name: "stand", count: 1 }
             ],
         },
     },
 
     defaults: {
         type: "terrain",
+        selectable: false,
+
+        animate: function() {
+            // no need to do a health check for terrain. Just call processActions
+            this.processActions();
+        },
+
+        processActions: function() {
+            // since there is no animation or special handling, just set imageList based on action
+            this.imageList = this.spriteArray[this.action];
+            this.imageOffset = this.imageList.offset;
+        },
+
+        drawSprite: function() {
+            let x = this.drawingX;
+            let y = this.drawingY;
+
+            var colorOffset = 0; // no team based colors for terrain
+            game.foregroundContext.drawImage(this.spriteSheet,
+                this.imageOffset * this.pixelWidth, colorOffset, 
+                this.pixelWidth, this.pixelHeight,
+                x, y,
+                this.pixelWidth, this.pixelHeight);
+        },
+
+        /*
         animationIndex: 0,
         action: "default",
         selected: false,
-        selectable: false,
+        
         
         animate: function() {
             // action: ['hint', 'default']
@@ -103,6 +129,7 @@ var terrain = {
 
             );
         }
+        */
     },
 
     load: loadItem,
