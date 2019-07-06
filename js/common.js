@@ -198,6 +198,13 @@ var baseItem = {
     selectable: true,
     orders: { type: "stand" },
     action: "stand",
+    // Selection related properties
+    selectionBorderColor: "rgba(255,255,0,0.5)",
+    selectionFillColor: "rgba(255,215,0,0.2)",
+    lifeBarBorderColor: "rgba(0,0,0,0.8)",
+    lifeBarHealthyFillColor: "rgba(0,255,0,0.5)",
+    lifeBarDamageFillColor: "rgba(255,0,0,0.5)",
+    lifeBarHeight: 5,
 
     // default method for animating an item
     animate: function() {
@@ -224,8 +231,14 @@ var baseItem = {
         // compute pixel coordinates on canvas for drawing item
         this.drawingX = (this.x * game.gridSize) - game.offsetX - this.pixelOffsetX;
         this.drawingY = (this.y * game.gridSize) - game.offsetY - this.pixelOffsetY;
+
+        if (this.selected) {
+            this.drawSelection();
+            this.drawLifeBar();
+        }
+
         this.drawSprite();
-    },
+    },    
 };
 
 /*

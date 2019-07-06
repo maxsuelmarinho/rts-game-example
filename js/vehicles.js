@@ -112,6 +112,35 @@ var vehicles = {
                 x, y,
                 this.pixelWidth, this.pixelHeight);
         },
+
+        drawLifeBar: function () {
+            let x = this.drawingX;
+            let y = this.drawingY - 2 * this.lifeBarHeight;
+
+            game.foregroundContext.fillStyle = (this.lifeCode == "healthy") ?
+                this.lifeBarHealthyFillColor : this.lifeBarDamagedFillColor;
+
+            game.foregroundContext.fillRect(
+                x, y, 
+                this.pixelWidth * this.life / this.hitPoints, this.lifeBarHeight);
+            game.foregroundContext.strokeStyle = this.lifeBarBorderColor;
+            game.foregroundContext.lineWidth = 1;
+            game.foregroundContext.strokeRect(x, y, this.baseWidth, this.lifeBarHeight);
+        },
+
+        drawSelection: function () {
+            let x = this.drawingX + this.pixelOffsetX;
+            let y = this.drawingY + this.pixelOffsetY;
+
+            // draw a filled circle around the vehicle
+            game.foregroundContext.strokeStyle = this.selectionBorderColor;
+            game.foregroundContext.lineWidth = 1;
+            game.foregroundContext.beginPath();
+            game.foregroundContext.arc(x, y, this.radius, 0, Math.PI * 2, false);
+            game.foregroundContext.fillStyle = this.selectionFillColor;
+            game.foregroundContext.fill();
+            game.foregroundContext.stroke();
+        },
         
         /*
         animationIndex: 0,
@@ -174,35 +203,7 @@ var vehicles = {
                 x, y,
                 this.pixelWidth, this.pixelHeight
             );
-        },
-
-        drawLifeBar: function () {
-            var x = this.drawingX;
-            var y = this.drawingY - 2 * game.lifeBarHeight;
-
-            game.foregroundContext.fillStyle = (this.lifeCode == "healthy") ?
-                game.healthBarHealthyFillColor : game.healthBarDamagedFillColor;
-
-            game.foregroundContext.fillRect(
-                x, y, 
-                this.pixelWidth * this.life / this.hitPoints, game.lifeBarHeight);
-            game.foregroundContext.strokeStyle = game.healthBarBorderColor;
-            game.foregroundContext.lineWidth = 1;
-            game.foregroundContext.strokeRect(x, y, this.baseWidth, game.lifeBarHeight);
-        },
-
-        drawSelection: function () {
-            var x = this.drawingX + this.pixelOffsetX;
-            var y = this.drawingY + this.pixelOffsetY;
-
-            game.foregroundContext.strokeStyle = game.selectionBorderColor;
-            game.foregroundContext.lineWidth = 1;
-            game.foregroundContext.beginPath();
-            game.foregroundContext.arc(x, y, this.radius, 0, Math.PI * 2, false);
-            game.foregroundContext.fillStyle = game.selectionFillColor;
-            game.foregroundContext.fill();
-            game.foregroundContext.stroke();
-        },
+        },       
 
         drawMovePath: function () {
             if (this.orders.path) {
