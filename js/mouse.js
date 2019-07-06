@@ -1,5 +1,4 @@
-var mouse = {
-    DRAG_THRESHOLD: 4,
+var mouse = {    
     // mouse's coordinates relative to top left corner of canvas
     x: 0,
     y: 0,
@@ -13,8 +12,14 @@ var mouse = {
     // is the mouse inside the canvas region
     insideCanvas: false,
 
-    //buttonPressed: false,
-    //dragSelect: false,    
+    // is the left mouse button currently pressed
+    buttonPressed: false,
+    
+    // is the player dragging and selecting with the left mouse button pressed
+    dragSelect: false,
+
+    // if the mouse is dragged more than this, assume the player is trying to select somethin
+    dragSelectThreshold: 5,
 
     init: function() {
         // listen for mouse events on the game foreground canvas
@@ -23,6 +28,8 @@ var mouse = {
         canvas.addEventListener("mousemove", mouse.mousemovehandler, false);
         canvas.addEventListener("mouseenter", mouse.mouseenterhandler, false);
         canvas.addEventListener("mouseout", mouse.mouseouthandler, false);
+        canvas.addEventListener("mousedown", mouse.mousedownhandler, false);
+        canvas.addEventListener("mouseup", mouse.mouseuphandler, false);
         mouse.canvas = canvas;
 
         /*
@@ -134,6 +141,7 @@ var mouse = {
     mousemovehandler: function(ev) {
         mouse.insideCanvas = true;
         mouse.setCoordinates(ev.clientX, ev.clientY);
+        mouse.checkIfDragging();
     },
 
     mouseenterhandler: function() {
@@ -143,6 +151,148 @@ var mouse = {
     mouseouthandler: function() {
         mouse.insideCanvas = false;
     },
+
+    mousedownhandler: function(ev) {
+        mouse.insideCanvas = true;
+        mouse.setCoordinates(ev.clientX, ev.clientY);
+
+        if (ev.button === 0) { // left mouse button was pressed
+            mouse.buttonPressed = true;
+            mouse.dragX = mouse.gameX;
+            mouse.dragY = mouse.gameY;
+        }
+    },
+
+    mouseuphandler: function(ev) {
+        mouse.setCoordinates(ev.clientX, ev.clientY);
+        let shiftPressed = ev.shiftPressed;
+
+        if (ev.button === 0) { // left mouse button was released
+            if (mouse.dragSelect) {
+                // if currently drag-selection, attempt to select items with the selection rectangle
+                mouse.finishDragSelection(shiftPressed);
+            } else {
+                // if not dragging, treat this as a normal click once the mouse is released
+                mouse.leftClick(shiftPressed);
+            }
+
+            mouse.buttonPressed = false;
+        }
+    },
+
+    finishDragSelection: function(shiftPressed) {
+        if (!shiftPressed) {
+            // if shift key is not pressed, clear any reviously selected item
+            game.clearSelection();
+        }
+
+        // calculate the bounds of the selection rectangle
+        let x1 = Math.min(mouse.gameX, mouse.dragX);
+        let y1 = Math.min(mouse.gameY, mouse.dragY);
+        let x2 = Math.max(mouse.gameX, mouse.dragX);
+        let y2 = Math.max(mouse.gameY, mouse.dragY);
+
+        game.items.forEach(function(item) {
+            // unselectable items, dead items, opponent team items, and buildings are not drag-selectable
+            if (!item.selectable || item.lifeCode === "dead" || item.team != game.team || item.type === "buildings") {
+                return;
+            }
+
+            let x = item.x * game.gridSize;
+            let y = item.y * game.gridSize;
+            if (x1 <= x && x2 >= x) {
+                if ((item.type === "vehicles" && y1 <= y && y2 >= y) ||
+                    // in case of aircraft, adjust for pixelShadowHeight
+                    (item.type === "aircraft" && (y1 <= y - item.pixelShadowHeight) &&
+                    (y2 >= y - item.pixelShadowHeight))) {
+
+                    game.selectItem(item, shiftPressed);
+                }
+            }
+        });
+
+        mouse.dragSelect = false;
+    },
+
+    // called whenever player completes a left-click on the game canvas
+    leftClick: function(shiftPressed) {
+        let clickedItem = mouse.itemUnderMouse();
+        if (clickedItem) {
+            console.log("item clicked: ", clickedItem);
+            // pressing shift adds to existing selection. If shift is not pressed, clear existing selection
+            if (!shiftPressed) {
+                game.clearSelection();
+            }
+
+            game.selectItem(clickedItem, shiftPressed);
+        }
+    },
+
+    // return the first item detected under the mouse
+    itemUnderMouse: function() {
+        for (let i = game.items.length - 1; i >= 0; i--) {
+            let item  = game.items[i];
+
+            // dead items will not be detected
+            if (item.lifeCode === "dead") {
+                continue;
+            }
+
+            let x = item.x * game.gridSize;
+            let y = item.y * game.gridSize;
+
+            if (item.type === "buildings" || item.type === "terrain") {
+                // if mouse coordinates are within rectangular area of building or terrain
+                if (x <= mouse.gameX && x >= (mouse.gameX - item.baseWidth) && y <= mouse.gameY && y >= (mouse.gameY - item.baseHeight)) {
+                    return item;
+                }
+                // TODO: should this have a return?
+            } else if (item.type === "aircraft") {
+                // if mouse coordinates are within radius of aircraft (adjusted for pixelShadowHeight)
+                if (Math.pow(x - mouse.gameX, 2) + Math.pow(y - mouse.gameY - item.pixelShadowHeight, 2) < Math.pow(item.radius, 2)) {
+                    return item;
+                }
+                // TODO: should this have a return?
+            } else if (item.type === "vehicles") {
+                // if mouse coordinates are within radius of item
+                if (Math.pow(x - mouse.gameX, 2) + Math.pow(y - mouse.gameY, 2) < Math.pow(item.radius, 2)) {
+                    return item;
+                }
+                // TODO: should this have a return?
+            }
+        }
+    },
+
+    checkIfDragging: function() {
+        if (mouse.buttonPressed) {
+            // if the mouse has been dragged more than threshold, treat it as a drag
+            if (Math.abs(mouse.dragX - mouse.gameX) > mouse.dragSelectThreshold && 
+                Math.abs(mouse.dragY - mouse.gameY) > mouse.dragSelectThreshold) {
+                mouse.dragSelect = true;
+            }
+            // TODO: otherwise it should be false?
+        } else {
+            mouse.dragSelect = false;
+        }
+    },
+
+    draw: function() {
+        // if the player is dragging and selecting,
+        // draw a white box to mark the selection area
+        if (this.dragSelect) {
+            let x = Math.min(this.gameX, this.dragX);
+            let y = Math.min(this.gameY, this.dragY);
+            let width = Math.abs(this.gameX - this.dragX);
+            let height = Math.abs(this.gameY - this.dragY);
+
+            game.foregroundContext.strokeStyle = 'white';
+            game.foregroundContext.strokeRect(
+                x - game.offsetX, y - game.offsetY,
+                width, height
+            );
+        }
+    },
+
 
     /*
     click: function(event, rightClick) {
@@ -227,23 +377,7 @@ var mouse = {
 
     canAttack: function(item) {
         return item.team == game.team && item.canAttack;
-    },
-
-    draw: function() {
-        if (this.dragSelect) {
-            var x = Math.min(this.gameX, this.dragX);
-            var y = Math.min(this.gameY, this.dragY);
-            var width = Math.abs(this.gameX - this.dragX);
-            var height = Math.abs(this.gameY - this.dragY);
-            game.foregroundContext.strokeStyle = 'white';
-            game.foregroundContext.strokeRect(
-                x - game.offsetX,
-                y - game.offsetY,
-                width,
-                height
-            );
-        }
-    },
+    },    
 
     itemUnderMouse: function() {
         for (var i = game.items.length - 1; i >= 0; i--) {

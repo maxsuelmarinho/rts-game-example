@@ -205,6 +205,9 @@ var game = {
             item.draw();
         });
 
+        // draw the mouse
+        mouse.draw();
+
         // call the drawing loop for the next frame using request animation frame
         if (game.running) {
             requestAnimationFrame(game.drawingLoop);
@@ -409,6 +412,34 @@ var game = {
         */
     },
 
+    clearSelection: function() {
+        while(game.selectedItems.length > 0) {
+            // removes the item from the array
+            game.selectedItems.pop().selected = false;
+        }
+    },
+
+    selectItem: function(item, shiftPressed) {
+        // Pressing shift and clicking on a selected item will deselect it
+        if (shiftPressed && item.selected) {
+            item.selected = false; // deselect item
+            for (let i = game.selectedItems.length - 1; i >= 0; i--) {
+                if (game.selectedItems[i].uid == item.uid) {
+                    game.selectedItems.splice(i, 1);
+                    break;
+                }
+            }
+
+            return;
+        }
+
+        if (item.selectable && !item.selected) {
+            console.log("item selected: ", item);
+            item.selected = true;
+            game.selectedItems.push(item);
+        }
+    },
+
     /*
     drawObstructedSquares: function() {
         if (!game.currentMapPassableGrid) {
@@ -429,33 +460,6 @@ var game = {
             }
         }
     },    
-
-    clearSelection: function() {
-        while(game.selectedItems.length > 0) {
-            // removes the item from the array
-            game.selectedItems.pop().selected = false;
-        }
-    },
-
-    selectItem: function(item, shiftPressed) {
-        // Presing shift and clicking on a selected item will deselect it
-        if (shiftPressed && item.selected) {
-            item.selected = false;
-            for (var i = game.selectedItems.length - 1; i >= 0; i--) {
-                if (game.selectedItems[i].uid == item.uid) {
-                    game.selectedItems.splice(i, 1);
-                    break;
-                }
-            }
-
-            return;
-        }
-
-        if (item.selectable && !item.selected) {
-            item.selected = true;
-            game.selectedItems.push(item);
-        }
-    },
 
     sendCommand: function(uids, details) {
         switch (game.type) {
