@@ -153,6 +153,13 @@ var game = {
 
     // the animation loop will run at a fixed interval (100ms)
     animationLoop: function() {
+        // process orders for any item that handles orders
+        game.items.forEach(function(item) {
+            if (item.processOrders) {
+                item.processOrders();
+            }
+        });
+
         // animate each of the elements within the game
         game.items.forEach(function(item) {
             item.animate();
@@ -440,6 +447,49 @@ var game = {
         }
     },
 
+    // send command to either singleplayer or multiplayer object
+    sendCommand: function(uids, details) {
+        if (game.type === "singleplayer") {
+            singleplayer.sendCommand(uids, details);
+        } else {
+            multiplayer.sendCommand(uids, details);
+        }
+    },
+
+    getItemByUid: function(uid) {
+        for (let i = game.items.length - 1; i >= 0; i--) {
+            if (game.items[i].uid === uid) {
+                return game.items[i];
+            }
+        }
+    },
+
+    // receive command from singleplayer or multiplayer object and send it to units
+    processCommand: function(uids, details) {
+        // in case the target "to" object is in terms of uid, fetch the target object
+        var toObject;        
+
+        if (details.toUid) {
+            toObject = game.getItemByUid(details.toUid);
+            if (!toObject || toObject.lifeCode === "dead") {
+                // the toObject no longer exists. Invalid command
+                return;
+            }
+        }
+
+        uids.forEach(function(uid) {
+            let item = game.getItemByUid(uid);
+
+            // if uid is for a valid item, set the order for the item
+            if (item) {
+                item.orders = Object.assign({}, details);
+                if (toObject) {
+                    item.orders.to = toObject;
+                }
+            }
+        });
+    },
+
     /*
     drawObstructedSquares: function() {
         if (!game.currentMapPassableGrid) {
@@ -457,44 +507,6 @@ var game = {
                         (y * game.gridSize) - game.offsetY,
                         game.gridSize, game.gridSize);
                 }
-            }
-        }
-    },    
-
-    sendCommand: function(uids, details) {
-        switch (game.type) {
-            case "singleplayer":
-                singleplayer.sendCommand(uids, details);
-                break;
-            case "multiplayer":
-                multiplayer.sendCommand(uids, details);
-                break;
-        }
-    },
-
-    getItemByUid: function(uid) {
-        for (var i = game.items.length - 1; i >= 0; i--) {
-            if (game.items[i].uid == uid) {
-                return game.items[i];
-            }
-        }
-    },
-
-    processCommand: function(uids, details) {
-        
-        if (details.toUid) {
-            details.to = game.getItemByUid(details.toUid);
-            if (!details.to || details.to.lifeCode == "dead") {
-                // object no longer exists. Invalid command
-                return;
-            }
-        }
-
-        for (var i in uids) {
-            var uid = uids[i];
-            var item = game.getItemByUid(uid);
-            if (item) {
-                item.orders = $.extend([], details);
             }
         }
     },

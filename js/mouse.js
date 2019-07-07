@@ -30,6 +30,8 @@ var mouse = {
         canvas.addEventListener("mouseout", mouse.mouseouthandler, false);
         canvas.addEventListener("mousedown", mouse.mousedownhandler, false);
         canvas.addEventListener("mouseup", mouse.mouseuphandler, false);
+        canvas.addEventListener("contextmenu", mouse.mouserightclickhandler, false);
+
         mouse.canvas = canvas;
 
         /*
@@ -177,6 +179,84 @@ var mouse = {
             }
 
             mouse.buttonPressed = false;
+        }
+    },
+
+    mouserightclickhandler: function(ev) {
+        mouse.rightClick(ev, true);
+
+        // prevent the browser from showing the context menu
+        ev.preventDefault(true);
+    },
+
+    // called whenevet player completes a right-click on the game canvas
+    rightClick: function() {
+        let clickedItem = mouse.itemUnderMouse();
+
+        // Handle actions like attacking and movement of selected units
+        if (clickedItem) { // player right-clicked on something
+            if (clickedItem.type !== "terrain") {
+                if (clickedItem.team !== game.team) { // player right-clicked on an enemy item
+                    let uids = [];
+
+                    // identify selected units from player's team that can attack
+                    game.selectedItems.forEach(function(item) {
+                        if (item.team === game.team && item.canAttack) {
+                            uids.push(item.uid);
+                        }
+                    }, this);
+
+                    // command units to attack the clicked item
+                    if (uids.length > 0) {
+                        game.sendCommand(uids, { type: "attack", toUid: clickedItem.uid });
+                    }
+                } else { // player right-clicked a friendly item
+                    let uids = [];
+
+                    // identify selected units from player's team that can move
+                    game.selectedItems.forEach(function(item) {
+                        if (item.team === game.team && item.canAttack && item.canMove) {
+                            uids.push(item.uid);
+                        }
+                    }, this);
+
+                    // command units to guard the clicked item
+                    if (uids.length > 0) {
+                        game.sendCommand(uids, { type: "guard", toUid: clickedItem.uid });
+                    }
+                }
+            } else if (clickedItem.name === "oilfield") { // player right-clicked on an oilfield
+                let uids = [];
+
+                // identify the first selected harvester (since only one can deploy at a time)
+                for (let i = game.selectedItems.length - 1; i >= 0; i--) {
+                    let item = game.selectedItems[i];
+
+                    if (item.team === game.team && item.type === "vehicles" && item.name === "harvester") {
+                        uids.push(item.uid);
+                        break;
+                    }
+                }
+
+                // command it to deploy on the oil field
+                if (uids.length > 0) {
+                    game.sendCommand(uids, { type: "deploy", toUid: clickedItem.uid });
+                }
+            }
+        } else { // player right-clicked the ground
+            let uids = [];
+
+            // identify selected units from player's team that can move
+            game.selectedItems.forEach(function(item) {
+                if (item.team === game.team && item.canMove) {
+                    uids.push(item.uid);
+                }
+            }, this);
+
+            // command units to move to the clicked location
+            if (uids.length > 0) {
+                game.sendCommand(uids, { type: "move", to: { x: mouse.gameX / game.gridSize, y: mouse.gameY / game.gridSize } });
+            }
         }
     },
 

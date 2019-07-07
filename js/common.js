@@ -206,6 +206,10 @@ var baseItem = {
     lifeBarDamageFillColor: "rgba(255,0,0,0.5)",
     lifeBarHeight: 5,
 
+    // movement-related properties
+    speedAdjustmentFactor: 1 / 64,
+    turnSpeedAdjustmentFactor: 1 / 8,
+
     // default method for animating an item
     animate: function() {
         // check the health of the item
@@ -238,22 +242,72 @@ var baseItem = {
         }
 
         this.drawSprite();
-    },    
+    },  
+    
+    // finds the angle toward a destination in terms of a direction (0 <= angle < directions)
+    findAngle(destination) {
+        var dx = destination.x - this.x;
+        var dy = destination.y - this.y;
+    
+        // convert Arctan to value between (0 - directions)
+        var angle = this.directions / 2 - (Math.atan2(dx, dy) * this.directions / (2 * Math.PI));
+        angle = (angle + this.directions) % this.directions;
+    
+        return angle;
+    },
+
+    // return the smallest difference (between -directions / 2 and +directions / 2) toward newDirection [-4 - +4]
+    angleDiff: function(newDirection) {
+        let currentDirection = this.direction;
+        let directions = this.directions;
+
+        // make both directions between -directions / 2 and +directions / 2
+        if (currentDirection >= directions / 2) {
+            currentDirection -= directions;
+        }
+
+        if (newDirection >= directions / 2) {
+            newDirection -= directions;
+        }
+
+        var difference = newDirection - currentDirection;
+
+        // ensure difference is also between -directions/2 and +directions/2
+        if (difference < -directions / 2) {
+            difference += difference;
+        }
+
+        if (difference > directions / 2) {
+            difference -= directions;
+        }
+
+        return difference;
+    },
+
+    turnTo: function(newDirection) {
+        // calculate differnce between new direction and current direction
+        let difference = this.angleDiff(newDirection);
+
+        // calculate maximum amount that aircraft can turn per animation cycle
+        let turnAmount = this.turnSpeed * this.turnSpeedAdjustmentFactor;
+
+        if (Math.abs(difference) > turnAmount) {
+            // change direction by turn amount
+            this.direction += turnAmount * Math.abs(difference) / difference;
+
+            // ensure direction doesn't go below 0 or above this.directions
+            this.direction = (this.direction + this.directions) % this.directions;
+            this.turning = true;
+        } else {
+            this.direction = newDirection;
+            this.turning = false;
+        }
+    },
 };
 
 /*
 // finds the angle between two objects in terms of a direction
 // where 0 <= angle < directions
-function findAngle(object, unit, directions) {
-    var dx = object.x - unit.x;
-    var dy = object.y - unit.y;
-
-    // convert Arctan to value between 0 - directions
-    var angle = 
-        wrapDirection(directions / 2 -(Math.atan2(dx, dy) * directions / (2 * Math.PI)), directions);
-
-    return angle;
-}
 
 // returns the smallest difference
 // value ranging between -directions / 2 to +directions / 2

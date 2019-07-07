@@ -50,9 +50,12 @@ var aircraft = {
         type: "aircraft",
         directions: 8,
         canMove: true,
+        // how slow should unit move while turning
+        speedAdjustmentWhileTurningFactor: 0.4,
 
         processActions: function() {
             let direction = Math.round(this.direction) % this.directions;
+            console.log("aircraft - ", "direction:", direction)
             switch(this.action) {
                 case "stand":
                     this.imageList = this.spriteArray["stand-" + direction];
@@ -134,6 +137,51 @@ var aircraft = {
             game.foregroundContext.lineTo(x, y + this.pixelShadowHeight);
             game.foregroundContext.stroke();
         },
+
+        processOrders: function() {
+            this.lastMovementX = 0;
+            this.lastMovementY = 0;
+
+            if (this.orders.to) {
+                var distanceFromDestinationSquared = 
+                        Math.pow(this.orders.to.x - this.x, 2) + Math.pow(this.orders.to.y - this.y, 2);
+                var distanceFromDestination = Math.pow(distanceFromDestinationSquared, 0.5);
+                var radius = this.radius / game.gridSize;
+            }
+
+            switch (this.orders.type) {
+                case "move":
+                    // move towards destination until distance from destination
+                    // is less than aircraft radius
+                    if (distanceFromDestination < radius) {
+                        this.orders = { type: "stand" };
+                    } else {
+                        this.moveTo(this.orders.to, distanceFromDestination);
+                    }
+                    break;
+            }
+        },
+
+        moveTo: function(destination, distanceFromDestination) {
+            // find out where we need to turn to get to destination
+            let newDirection = this.findAngle(destination);
+
+            // turn toward new direction if necessary
+            this.turnTo(newDirection);
+
+            // calculate maximum distance that aircraft can move per animation cycle
+            let maximumMovement = this.speed * this.speedAdjustmentFactor * 
+                (this.turning ? this.speedAdjustmentWhileTurningFactor : 1);
+            
+            let movement = Math.min(maximumMovement, distanceFromDestination);
+
+            // calculate x and y components of the movement
+            let angleRadians = -(this.direction / this.directions) * 2 * Math.PI;
+            this.lastMovementX = -(movement * Math.sin(angleRadians));
+            this.lastMovementY = -(movement * Math.cos(angleRadians));
+            this.x = this.x + this.lastMovementX;
+            this.y = this.y + this.lastMovementY;
+        }
         
         /*
         animationIndex: 0,
@@ -202,51 +250,7 @@ var aircraft = {
                 x, y + this.pixelShadowHeight,
                 this.pixelWidth, this.pixelHeight
             );
-        },       
-
-        processOrders: function() {
-            this.lastMovementX = 0;
-            this.lastMovementY = 0;
-            switch (this.orders.type) {
-                case "move":
-                    // move towards destination until distance from destination
-                    // is less than aircraft radius
-                    var distanceFromDestinationSquared = 
-                        Math.pow(this.orders.to.x - this.x, 2) + Math.pow(this.orders.to.y - this.y, 2);
-
-                    if (distanceFromDestinationSquared < Math.pow(this.radius / game.gridSize, 2)) {
-                        this.orders = { type: "float" };
-                    } else {
-                        this.moveTo(this.orders.to);
-                    }
-                    break;
-            }
-        },
-
-        moveTo: function(destination) {
-            // find out where we need to turn to get to destination
-            var newDirection = findAngle(destination, this, this.directions); // [0-7]
-
-            // calculate difference between new direction and current direction
-            var difference = angleDiff(this.direction, newDirection, this.directions); // [-4,4]
-
-            // calculate amount that aircraft can turn per animation cycle
-            var turnAmount = this.turnSpeed * game.turnSpeedAdjustmentFactor;
-            if (Math.abs(difference) > turnAmount) {
-                this.direction = 
-                    wrapDirection(this.direction + turnAmount * Math.abs(difference) / difference, this.directions);
-            } else {
-                // calculate distance that aircraft can move per animation cycle
-                var movement = this.speed * game.speedAdjustmentFactor;
-
-                // calculate x and y components of the movement
-                var angleRadians = -(Math.round(this.direction) / this.directions) * 2 * Math.PI;
-                this.lastMovementX = -(movement * Math.sin(angleRadians));
-                this.lastMovementY = -(movement * Math.cos(angleRadians));
-                this.x = this.x + this.lastMovementX;
-                this.y = this.y + this.lastMovementY;
-            }
-        }
+        },        
         */
     },
 
