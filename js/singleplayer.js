@@ -29,6 +29,8 @@ var singleplayer = {
         game.offsetX = level.startX * game.gridSize;
         game.offsetY = level.startY * game.gridSize;
 
+        game.createTerrainGrid();
+
         // enable the enter mission button once all assets are loaded
         loader.onload = function() {
             enterMissionButton.disabled = false;

@@ -205,7 +205,7 @@ var game = {
         game.drawBackground();
 
         // clear the foreground canvas
-        game.foregroundContext.clearRect(0, 0, game.canvasWidth, game.canvasHeight);
+        game.foregroundContext.clearRect(0, 0, game.canvasWidth, game.canvasHeight);        
 
         // start drawing the foreground elements
         game.sortedItems.forEach(function(item) {
@@ -214,6 +214,8 @@ var game = {
 
         // draw the mouse
         mouse.draw();
+
+        game.drawObstructedSquares();
 
         // call the drawing loop for the next frame using request animation frame
         if (game.running) {
@@ -266,7 +268,7 @@ var game = {
                 game.canvasWidth, game.canvasHeight);
             
             game.refreshBackground = false;
-        }
+        }        
 
         // clear the foreground canvas
         // game.foregroundContext.clearRect(
@@ -297,6 +299,26 @@ var game = {
             requestAnimationFrame(game.drawingLoop);
         }
         */
+    },
+
+    drawObstructedSquares: function() {        
+        if (!game.currentMapPassableGrid) {
+            return;
+        }
+        
+        for (let y = 0; y < game.currentMapPassableGrid.length; y++) {
+            for (let x = 0; x < game.currentMapPassableGrid[y].length; x++) {
+                var obstruction = game.currentMapPassableGrid[y][x];
+                if (obstruction == 1) {
+                    game.foregroundContext.fillStyle = "rgb(255, 0, 0, 0.3)";
+
+                    game.foregroundContext.fillRect(
+                        (x * game.gridSize) - game.offsetX,
+                        (y * game.gridSize) - game.offsetY,
+                        game.gridSize, game.gridSize);
+                }
+            }
+        }
     },
 
     handlePanning: function() {
@@ -376,11 +398,8 @@ var game = {
         // add the item to the type specific array
         game[item.type].push(item);
 
-        /*
-        if (item.type == "buildings" || item.type == "terrain") {
-            game.currentMapPassableGrid = undefined;
-        }
-        */
+        // reset currentMapPassableGrid whenever the map changes
+        game.resetCurrentMapPassableGrid(item);
 
         return item;
     },
@@ -412,11 +431,14 @@ var game = {
             }
         }
 
-        /*
-        if (item.type == "buildings" || item.type == "terrain") {
+        // reset currentMapPassableGrid whenever the map changes
+        game.resetCurrentMapPassableGrid(item);
+    },
+
+    resetCurrentMapPassableGrid: function(item) {
+        if (item.type === "buildings" || item.type === "terrain") {
             game.currentMapPassableGrid = undefined;
         }
-        */
     },
 
     clearSelection: function() {
@@ -490,34 +512,55 @@ var game = {
         });
     },
 
-    /*
-    drawObstructedSquares: function() {
-        if (!game.currentMapPassableGrid) {
-            return;
-        }
-        
-        for (var y = 0; y < game.currentMapPassableGrid.length; y++) {
-            for (var x = 0; x < game.currentMapPassableGrid[y].length; x++) {
-                var obstruction = game.currentMapPassableGrid[y][x];
-                if (obstruction == 1) {
-                    game.foregroundContext.fillStyle = "rgb(255, 0, 0, 0.3)";
+    // create a grid that stores all obstructed tiles as 1 and unobstructed as 0
+    createTerrainGrid: function() {
+        let map = game.currentMap;
 
-                    game.foregroundContext.fillRect(
-                        (x * game.gridSize) - game.offsetX,
-                        (y * game.gridSize) - game.offsetY,
-                        game.gridSize, game.gridSize);
-                }
-            }
+        // initialize terrain grid to 2d array of zeroes
+        game.currentMapTerrainGrid = new Array(map.mapGridHeight);
+
+        var row = new Array(map.mapGridWidth);
+        for (let x = 0; x < map.mapGridWidth; x++) {
+            row[x] = 0;
         }
+
+        for (let y = 0; y < map.mapGridHeight; y++) {
+            game.currentMapTerrainGrid[y] = row.slice(0);
+        }
+
+        // take all the obstructed terrain coordinates and mark them on the terrain grid as unpassable
+        map.mapObstructedTerrain.forEach(function(obstruction) {
+            game.currentMapTerrainGrid[obstruction[1]][obstruction[0]] = 1;
+        }, this);
+
+        // reset the passable grid
+        game.currentMapPassableGrid = undefined;
+
+        game.rebuildPassableGrid();
+    },
+
+    // make a copy of a 2d array
+    makeArrayCopy: function(originalArray) {
+        var length = originalArray.length;
+        var copy = new Array(length);
+
+        for (let i = 0; i < length; i++) {
+            copy[i] = originalArray[i].slice(0);
+        }
+
+        return copy;
     },
 
     rebuildPassableGrid: function() {
-        game.currentMapPassableGrid = $.extend(true, [], game.currentMapTerrainGrid);
-        for (var i = game.items.length - 1; i >= 0; i--) {
+        // initialize passable grid with the value of terrain grid
+        game.currentMapPassableGrid = game.makeArrayCopy(game.currentMapTerrainGrid);
+
+        // also mark all building and terrain as unpassable items
+        for (let i = game.items.length - 1; i >= 0; i--) {
             var item = game.items[i];
-            if (item.type == "buildings" || item.type == "terrain") {
-                for (var y = item.passableGrid.length - 1; y >= 0; y--) {
-                    for (var x = item.passableGrid[y].length - 1; x >= 0; x--) {
+            if (item.type === "buildings" || item.type === "terrain") {
+                for (let y = item.passableGrid.length - 1; y >= 0; y--) {
+                    for (let x = item.passableGrid[y].length - 1; x >= 0; x--) {
                         if (item.passableGrid[y][x]) {
                             game.currentMapPassableGrid[item.y + y][item.x + x] = 1;
                         }
@@ -526,7 +569,6 @@ var game = {
             }
         }
     },
-    */
 };
 
 // initialize and resize the game once page has fully loaded

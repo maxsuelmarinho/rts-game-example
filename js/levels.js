@@ -71,7 +71,7 @@ var levels = {
                 {
                     "type": "buildings",
                     "name": "starport",
-                    "x": 18,
+                    "x": 21,
                     "y": 6,
                     "team": "green",
                     "action": "open"

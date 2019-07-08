@@ -55,7 +55,7 @@ var aircraft = {
 
         processActions: function() {
             let direction = Math.round(this.direction) % this.directions;
-            console.log("aircraft - ", "direction:", direction)
+            //console.log("aircraft - ", "direction:", direction)
             switch(this.action) {
                 case "stand":
                     this.imageList = this.spriteArray["stand-" + direction];
