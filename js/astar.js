@@ -1,4 +1,3 @@
-/* Pathfinding related functions */
 
 var AStar = (function () {
 
@@ -17,6 +16,7 @@ var AStar = (function () {
             $E && !grid[S][E] && (result[i++] = { x: E, y: S });
             $W && !grid[S][W] && (result[i++] = { x: W, y: S });
         }
+
         return result;
     }
 
@@ -33,6 +33,7 @@ var AStar = (function () {
             $N && !grid[N][W] && (result[i++] = { x: W, y: N });
             $S && !grid[S][W] && (result[i++] = { x: W, y: S });
         }
+
         return result;
     }
 
@@ -51,12 +52,13 @@ var AStar = (function () {
             $E = E < cols && !grid[y][E],
             $W = W > -1 && !grid[y][W],
             result = [],
-            i = 0
-            ;
+            i = 0;
+
         $N && (result[i++] = { x: x, y: N });
         $E && (result[i++] = { x: E, y: y });
         $S && (result[i++] = { x: x, y: S });
         $W && (result[i++] = { x: W, y: y });
+
         return find($N, $S, $E, $W, N, S, E, W, grid, rows, cols, result, i);
     }
 
@@ -67,8 +69,8 @@ var AStar = (function () {
     function euclidean(start, end, f1, f2) {
         var
             x = start.x - end.x,
-            y = start.y - end.y
-            ;
+            y = start.y - end.y;
+
         return f2(x * x + y * y);
     }
 
@@ -87,8 +89,8 @@ var AStar = (function () {
             result = [],
             open = [{ x: start[0], y: start[1], f: 0, g: 0, v: start[0] + start[1] * cols }],
             length = 1,
-            adj, distance, find, i, j, max, min, current, next
-            ;
+            adj, distance, find, i, j, max, min, current, next;
+
         end = { x: end[0], y: end[1], v: end[0] + end[1] * cols };
         switch (f) {
             case "Diagonal":
@@ -116,9 +118,9 @@ var AStar = (function () {
                     max = f;
                     min = i;
                 }
-            };
+            }
             current = open.splice(min, 1)[0];
-            if (current.v != end.v) {
+            if (current.v !== end.v) {
                 --length;
                 next = successors(find, current.x, current.y, grid, rows, cols);
                 for (i = 0, j = next.length; i < j; ++i) {
@@ -134,11 +136,12 @@ var AStar = (function () {
             } else {
                 i = length = 0;
                 do {
-                    result[i++] = { x: current.x, y: current.y };
+                    result[i++] = [current.x, current.y];
                 } while (current = current.p);
                 result.reverse();
             }
         } while (length);
+
         return result;
     }
 
