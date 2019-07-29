@@ -101,7 +101,7 @@ var vehicles = {
             }
         },
 
-        // defualt function for drawing a vehicle
+        // default function for drawing a vehicle
         drawSprite: function() {
             let x = this.drawingX;
             let y = this.drawingY;
@@ -127,7 +127,7 @@ var vehicles = {
                 this.pixelWidth * this.life / this.hitPoints, this.lifeBarHeight);
             game.foregroundContext.strokeStyle = this.lifeBarBorderColor;
             game.foregroundContext.lineWidth = 1;
-            game.foregroundContext.strokeRect(x, y, this.baseWidth, this.lifeBarHeight);
+            game.foregroundContext.strokeRect(x, y, this.pixelWidth, this.lifeBarHeight);
         },
 
         drawSelection: function () {
@@ -179,8 +179,7 @@ var vehicles = {
             // direction that we will need to turn to reach destination
             let newDirection;
 
-            let vehicleOutsideMapBounds = (start[1] < 0 || start[1] > game.currentMap.mapGridHeight - 1 ||
-                start[0] < 0 || start[0] > game.currentMap.mapGridWidth);
+            let vehicleOutsideMapBounds = (start[1] < 0 || start[1] > game.currentMap.mapGridHeight - 1 || start[0] < 0 || start[0] > game.currentMap.mapGridWidth);
             let vehicleReachedDestinationTile = (start[0] === end[0] && start[1] === end[1]);
 
             // rebuild the passable grid if needed
@@ -221,7 +220,7 @@ var vehicles = {
             let collisionObjects = this.checkForCollisions(game.currentMapPassableGrid);
 
             // moving along the present path will cause a collision
-            if(this.colliding) {
+            if (this.colliding) {
                 newDirection = this.steerAwayFromCollisions(collisionObjects);
             }
 
@@ -229,8 +228,7 @@ var vehicles = {
             this.turnTo(newDirection);
 
             // calculate maximum distance that vehicle can move per animation cycle
-            let maximumMovement = 
-                this.speed * this.speedAdjustmentFactor * (this.turning ? this.speedAdjustmentWhileTurningFactor : 1);
+            let maximumMovement = this.speed * this.speedAdjustmentFactor * (this.turning ? this.speedAdjustmentWhileTurningFactor : 1);
             let movement = Math.min(maximumMovement, distanceFromDestination);
 
             // don't move if we are in a hard collision
@@ -293,7 +291,7 @@ var vehicles = {
                         } else if (distanceSquared < gridSoftCollisionThreshold) {
                             // distance of obstructed grid from vehicle is less than soft collision threshold
                             collisionObjects.push({
-                                collisionObjects: "soft",
+                                collisionType: "soft",
                                 with: {
                                     type: "wall",
                                     x: j + 0.5,
@@ -355,7 +353,7 @@ var vehicles = {
                 let objectAngle = this.findAngle(collObject.with);
                 let objectAngleRadians = -(objectAngle / this.directions) * 2 * Math.PI;
                 let forceMagnitude;
-                switch(collObject.collisionType) {
+                switch (collObject.collisionType) {
                     case "hard":
                         forceMagnitude = 2;
                         break;
@@ -372,7 +370,8 @@ var vehicles = {
             }
 
             // find a new direction based on the force vector
-            let newDirection = this.directions / 2 - (Math.atan2(forceVector.x, forceVector.y) + this.directions / (2 * Math.PI));
+            let newDirection = this.directions / 2 -
+                (Math.atan2(forceVector.x, forceVector.y) * this.directions / (2 * Math.PI));
             newDirection = (newDirection + this.directions) % this.directions;
             return newDirection;
         },
