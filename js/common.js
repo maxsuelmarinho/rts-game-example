@@ -1,3 +1,4 @@
+/*
 (function() {
     var lastTime = 0;
     var vendors = ['ms', ';', 'webkit', 'o'];
@@ -26,283 +27,323 @@
         };
     }
 }());
+*/
 
 var loader = {
-    loaded: true,
-    loadedCount: 0, // assets that have been loaded so far
-    totalCount: 0, // total number of assets to load
-    soundFileExtention: ".ogg",
+  loaded: true,
+  loadedCount: 0, // assets that have been loaded so far
+  totalCount: 0, // total number of assets to load
 
-    init: function() {
-        // check for sound support
-        var mp3Support, oggSupport;
-        var audio = document.createElement('audio');
-        if (audio.canPlayType) { // "", "maybe", "probably"
-            mp3Support = "" != audio.canPlayType('audio/mpeg');
-            oggSupport = "" != audio.canPlayType('audio/ogg; codecs="vorbis"');
-        } else {
-            // the audio tag is not supported
-            mp3Support = false;
-            oggSupport = false;
-        }
+  init: function() {
+    // check for sound support
+    var mp3Support, oggSupport;
+    var audio = document.createElement("audio");
+    if (audio.canPlayType) {
+      // currently canPlayType() returns: "", "maybe", or "probably"
+      mp3Support = "" !== audio.canPlayType("audio/mpeg");
+      oggSupport = "" !== audio.canPlayType('audio/ogg; codecs="vorbis"');
+    } else {
+      // the audio tag is not supported
+      mp3Support = false;
+      oggSupport = false;
+    }
 
-        loader.soundFileExtention = oggSupport ? ".ogg" : mp3Support ? ".mp3" : undefined;
-    },
+    // check for ogg, then mp3, and finally set soundFileExtn to undefined
+    loader.soundFileExtn = oggSupport
+      ? ".ogg"
+      : mp3Support
+      ? ".mp3"
+      : undefined;
+  },
 
-    loadImage: function(url) {
-        this.totalCount++;
-        this.loaded = false;
+  loadImage: function(url) {
+    this.loaded = false;
+    this.totalCount++;
 
-        //$('#loadingscreen').show();
-        game.showScreen("loadingscreen");
+    //$('#loadingscreen').show();
+    game.showScreen("loadingscreen");
 
-        var image = new Image();
-        image.src = url;
-        //image.onload = loader.itemLoaded;
-        image.addEventListener("load", loader.itemLoaded, false);
-        return image;
-    },
-    
-    loadSound: function(url) {
-        this.totalCount++;
-        this.loaded = false;
+    var image = new Image();
 
-        //$('#loadingscreen').show();
-        game.showScreen("loadingscreen");
+    //image.onload = loader.itemLoaded;
+    image.addEventListener("load", loader.itemLoaded, false);
+    image.src = url;
 
-        var audio = new Audio();
-        audio.src = url + loader.soundFileExtention;
-        audio.addEventListener("canplaythrough", loader.itemLoaded, false);
-        return audio;
-    },
+    return image;
+  },
 
-    itemLoaded: function(ev) {
-        loader.loadedCount++;
-        // stop listening for event type (load or canplaythrough) for this item now that it has been loaded
-        ev.target.removeEventListener(ev.type, loader.itemLoaded, false);
+  soundFileExtn: ".ogg",
 
-        //$('#loadingmessage').html('Loaded ' + loader.loadedCount + ' of ' + loader.totalCount);
-        document.getElementById("loadingmessage").innerHTML = 'Loaded ' + loader.loadedCount + ' of ' + loader.totalCount;
+  loadSound: function(url) {
+    this.loaded = false;
+    this.totalCount++;
 
-        if (loader.loadedCount === loader.totalCount) {
-            // loader has loaded completely
-            // reset and clear the loader
-            loader.loaded = true;
-            loader.loadedCount = 0;
-            loader.totalCount = 0;
+    //$('#loadingscreen').show();
+    game.showScreen("loadingscreen");
 
-            //$('#loadingscreen').hide();
-            game.hideScreen("loadingscreen");
+    var audio = new Audio();
 
-            if (loader.onload) {
-                loader.onload();
-                loader.onload = undefined;
-            }
-        }
-    },
+    audio.addEventListener("canplaythrough", loader.itemLoaded, false);
+    audio.src = url + loader.soundFileExtn;
+
+    return audio;
+  },
+
+  itemLoaded: function(ev) {
+    // stop listening for event type (load or canplaythrough) for this item now that it has been loaded
+    ev.target.removeEventListener(ev.type, loader.itemLoaded, false);
+
+    loader.loadedCount++;
+
+    //$('#loadingmessage').html('Loaded ' + loader.loadedCount + ' of ' + loader.totalCount);
+    document.getElementById("loadingmessage").innerHTML =
+      "Loaded " + loader.loadedCount + " of " + loader.totalCount;
+
+    if (loader.loadedCount === loader.totalCount) {
+      // loader has loaded completely
+      // reset and clear the loader
+      loader.loaded = true;
+      loader.loadedCount = 0;
+      loader.totalCount = 0;
+
+      //$('#loadingscreen').hide();
+      game.hideScreen("loadingscreen");
+
+      if (loader.onload) {
+        loader.onload();
+        loader.onload = undefined;
+      }
+    }
+  }
 };
 
 // the default load() method used by all our game entities
 function loadItem(name) {
-    console.log("loadItem", name);
-    var item = this.list[name];
+  console.log("loadItem", name);
+  var item = this.list[name];
 
-    // if the sprite array has already been loaded, then no need to do it again
-    if (item.spriteArray) {
-        return;
+  // if the sprite array has already been loaded, then no need to do it again
+  if (item.spriteArray) {
+    return;
+  }
+
+  item.spriteSheet = loader.loadImage(
+    "images/" + this.defaults.type + "/" + name + ".png"
+  );
+  item.spriteArray = [];
+  item.spriteCount = 0;
+
+  item.spriteImages.forEach(function(spriteImage) {
+    let constructImageCount = spriteImage.count;
+    let constructDirectionCount = spriteImage.directions;
+
+    if (constructDirectionCount) {
+      // if the spriteImage has directions defined, store sprites for each direction in spriteArray
+      for (let i = 0; i < constructDirectionCount; i++) {
+        let constructImageName = spriteImage.name + "-" + i;
+
+        item.spriteArray[constructImageName] = {
+          name: constructImageName,
+          count: constructImageCount,
+          offset: item.spriteCount
+        };
+        item.spriteCount += constructImageCount;
+      }
+    } else {
+      // if the spriteImage has no directions, store just the name and image count in spriteArray
+      let constructImageName = spriteImage.name;
+
+      item.spriteArray[constructImageName] = {
+        name: constructImageName,
+        count: constructImageCount,
+        offset: item.spriteCount
+      };
+
+      item.spriteCount += constructImageCount;
     }
-
-    item.spriteSheet = loader.loadImage('images/' + this.defaults.type + '/' + name + '.png');
-    item.spriteArray = [];
-    item.spriteCount = 0;
-
-    item.spriteImages.forEach(function(spriteImage) {
-        let constructImageCount = spriteImage.count;
-        let constructDirectionCount = spriteImage.directions;
-
-        if (constructDirectionCount) {
-            for (let i = 0; i < constructDirectionCount; i++) {
-                var constructImageName = spriteImage.name + '-' + i;
-                item.spriteArray[constructImageName] = {
-                    name: constructImageName,
-                    count: constructImageCount,
-                    offset: item.spriteCount
-                };
-
-                item.spriteCount += constructImageCount;
-            }
-        } else {
-            // if the spriteImage has no directions, store just the name and image count in spriteArray
-            let constructImageName = spriteImage.name;
-            item.spriteArray[constructImageName] = {
-                name: constructImageName,
-                count: constructImageCount,
-                offset: item.spriteCount
-            };
-
-            item.spriteCount += constructImageCount;
-        }
-    });        
+  });
 }
 
 // Polyfill for a few browsers that still do not support Object.assign
 if (typeof Object.assign !== "function") {
-    Object.assign = function(target, varArgs) { // .length of function is 2
-        "use strict";
-        if (target === null) { // TypeError if undefined or null
-            throw new TypeError("Cannot convert undefined or null object");
-        }
+  Object.assign = function(target, varArgs) {
+    // .length of function is 2
+    "use strict";
+    if (target === null) {
+      // TypeError if undefined or null
+      throw new TypeError("Cannot convert undefined or null to object");
+    }
 
-        var to = Object(target);
-        for (var index = 1; index < arguments.length; index++) {
-            var nextSource = arguments[index];
-            if (nextSource != null) { // skip over if undefined or null
-                for (var nextKey in nextSource) {
-                    // avoid bugs when hasOwnProperty is shadowed
-                    if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
-                        to[nextKey] = nextSource[nextKey];
-                    }
-                }
-            }
-        }
+    var to = Object(target);
 
-        return to;
-    };
+    for (var index = 1; index < arguments.length; index++) {
+      var nextSource = arguments[index];
+
+      if (nextSource != null) {
+        // skip over if undefined or null
+        for (var nextKey in nextSource) {
+          // avoid bugs when hasOwnProperty is shadowed
+          if (Object.prototype.hasOwnProperty.call(nextSource, nextKey)) {
+            to[nextKey] = nextSource[nextKey];
+          }
+        }
+      }
+    }
+
+    return to;
+  };
 }
 
 // the default add() method used by all our game entities
-function addItem(details) {    
-    var name = details.name;
+function addItem(details) {
+  var name = details.name;
 
-    // initialize the item with any default properties the item should have
-    var item = Object.assign({}, baseItem);
-    // assign the item all the default properties for its category type
-    Object.assign(item, this.defaults);
-    // assign item properties based on the item name
-    Object.assign(item, this.list[name]);
+  // initialize the item with any default properties the item should have
+  var item = Object.assign({}, baseItem);
+  // assign the item all the default properties for its category type
+  Object.assign(item, this.defaults);
+  // assign item properties based on the item name
+  Object.assign(item, this.list[name]);
 
-    // by default, set the item's life to its maximum hit points
-    item.life = item.hitPoints;
+  // by default, set the item's life to its maximum hit points
+  item.life = item.hitPoints;
 
-    // override item defaults based on details
-    Object.assign(item, details);
-    
-    return item;
+  // override item defaults based on details
+  Object.assign(item, details);
+
+  return item;
 }
 
 // default properties that every item should have
 var baseItem = {
-    animationIndex: 0,
-    direction: 0,
-    selected: false,
-    selectable: true,
-    orders: { type: "stand" },
-    action: "stand",
-    // Selection related properties
-    selectionBorderColor: "rgba(255,255,0,0.5)",
-    selectionFillColor: "rgba(255,215,0,0.2)",
-    lifeBarBorderColor: "rgba(0,0,0,0.8)",
-    lifeBarHealthyFillColor: "rgba(0,255,0,0.5)",
-    lifeBarDamageFillColor: "rgba(255,0,0,0.5)",
-    lifeBarHeight: 5,
+  animationIndex: 0,
+  direction: 0,
 
-    // movement-related properties
-    speedAdjustmentFactor: 1 / 64,
-    turnSpeedAdjustmentFactor: 1 / 8,
+  selected: false,
+  selectable: true,
 
-    // default method for animating an item
-    animate: function() {
-        // check the health of the item
-        if (this.life > this.hitPoints * 0.4) {
-            // consider item healthy if it has more than 40% life
-            this.lifeCode = "healthy";
-        } else if (this.life > 0) {
-            // consider item damaged if it has less than 40% life
-            this.lifeCode = "damaged";
-        } else {
-            // remove item from the game if it has died (life is 0 or negative)
-            this.lifeCode = "dead";
-            game.remove(this);
-            return;
-        }
+  orders: { type: "stand" },
+  action: "stand",
 
-        // process the current action
-        this.processActions();
-    },
+  // default method for animating an item
+  animate: function() {
+    // check the health of the item
+    if (this.life > this.hitPoints * 0.4) {
+      // consider item healthy if it has more than 40% life
+      this.lifeCode = "healthy";
+    } else if (this.life > 0) {
+      // consider item damaged if it has less than 40% life
+      this.lifeCode = "damaged";
+    } else {
+      // remove item from the game if it has died (life is 0 or negative)
+      this.lifeCode = "dead";
+      game.remove(this);
 
-    // default method for drawing an item
-    draw: function() {
-        // compute pixel coordinates on canvas for drawing item
-        this.drawingX = (this.x * game.gridSize) - game.offsetX - this.pixelOffsetX;
-        this.drawingY = (this.y * game.gridSize) - game.offsetY - this.pixelOffsetY;
+      return;
+    }
 
-        if (this.selected) {
-            this.drawSelection();
-            this.drawLifeBar();
-        }
+    // process the current action
+    this.processActions();
+  },
 
-        this.drawSprite();
-    },  
-    
-    // finds the angle toward a destination in terms of a direction (0 <= angle < directions)
-    findAngle(destination) {
-        var dx = destination.x - this.x;
-        var dy = destination.y - this.y;
-    
-        // convert Arctan to value between (0 - directions)
-        var angle = this.directions / 2 - (Math.atan2(dx, dy) * this.directions / (2 * Math.PI));
-        angle = (angle + this.directions) % this.directions;
-    
-        return angle;
-    },
+  // default method for drawing an item
+  draw: function() {
+    // compute pixel coordinates on canvas for drawing item
+    this.drawingX = this.x * game.gridSize - game.offsetX - this.pixelOffsetX;
+    this.drawingY = this.y * game.gridSize - game.offsetY - this.pixelOffsetY;
 
-    // return the smallest difference (between -directions / 2 and +directions / 2) toward newDirection [-4 - +4]
-    angleDiff: function(newDirection) {
-        let currentDirection = this.direction;
-        let directions = this.directions;
+    // adjust based on interpolation factor
+    if (this.canMove) {
+      this.drawingX +=
+        this.lastMovementX * game.drawingInterpolationFactor * game.gridSize;
+      this.drawingY +=
+        this.lastMovementY * game.drawingInterpolationFactor * game.gridSize;
+    }
 
-        // make both directions between -directions / 2 and +directions / 2
-        if (currentDirection >= directions / 2) {
-            currentDirection -= directions;
-        }
+    if (this.selected) {
+      this.drawSelection();
+      this.drawLifeBar();
+    }
 
-        if (newDirection >= directions / 2) {
-            newDirection -= directions;
-        }
+    this.drawSprite();
+  },
 
-        var difference = newDirection - currentDirection;
+  // Selection related properties
+  selectionBorderColor: "rgba(255,255,0,0.5)",
+  selectionFillColor: "rgba(255,215,0,0.2)",
+  lifeBarBorderColor: "rgba(0,0,0,0.8)",
+  lifeBarHealthyFillColor: "rgba(0,255,0,0.5)",
+  lifeBarDamagedFillColor: "rgba(255,0,0,0.5)",
 
-        // ensure difference is also between -directions/2 and +directions/2
-        if (difference < -directions / 2) {
-            difference += difference;
-        }
+  lifeBarHeight: 5,
 
-        if (difference > directions / 2) {
-            difference -= directions;
-        }
+  // movement-related properties
+  speedAdjustmentFactor: 1 / 64,
+  turnSpeedAdjustmentFactor: 1 / 8,
 
-        return difference;
-    },
+  // finds the angle toward a destination in terms of a direction (0 <= angle < directions)
+  findAngle: function(destination) {
+    var dy = destination.y - this.y;
+    var dx = destination.x - this.x;
 
-    turnTo: function(newDirection) {
-        // calculate differnce between new direction and current direction
-        let difference = this.angleDiff(newDirection);
+    // convert Arctan to value between (0 - directions)
+    var angle =
+      this.directions / 2 -
+      (Math.atan2(dx, dy) * this.directions) / (2 * Math.PI);
 
-        // calculate maximum amount that aircraft can turn per animation cycle
-        let turnAmount = this.turnSpeed * this.turnSpeedAdjustmentFactor;
+    angle = (angle + this.directions) % this.directions;
 
-        if (Math.abs(difference) > turnAmount) {
-            // change direction by turn amount
-            this.direction += turnAmount * Math.abs(difference) / difference;
+    return angle;
+  },
 
-            // ensure direction doesn't go below 0 or above this.directions
-            this.direction = (this.direction + this.directions) % this.directions;
-            this.turning = true;
-        } else {
-            this.direction = newDirection;
-            this.turning = false;
-        }
-    },
+  // return the smallest difference (between -directions / 2 and +directions / 2) toward newDirection [-4 - +4]
+  angleDiff: function(newDirection) {
+    let currentDirection = this.direction;
+    let directions = this.directions;
+
+    // make both directions between -directions / 2 and +directions / 2
+    if (currentDirection >= directions / 2) {
+      currentDirection -= directions;
+    }
+
+    if (newDirection >= directions / 2) {
+      newDirection -= directions;
+    }
+
+    var difference = newDirection - currentDirection;
+
+    // ensure difference is also between -directions/2 and +directions/2
+    if (difference < -directions / 2) {
+      difference += directions;
+    }
+
+    if (difference > directions / 2) {
+      difference -= directions;
+    }
+
+    return difference;
+  },
+
+  turnTo: function(newDirection) {
+    // calculate differnce between new direction and current direction
+    let difference = this.angleDiff(newDirection);
+
+    // calculate maximum amount that aircraft can turn per animation cycle
+    let turnAmount = this.turnSpeed * this.turnSpeedAdjustmentFactor;
+
+    if (Math.abs(difference) > turnAmount) {
+      // change direction by turn amount
+      this.direction += (turnAmount * Math.abs(difference)) / difference;
+
+      // ensure direction doesn't go below 0 or above this.directions
+      this.direction = (this.direction + this.directions) % this.directions;
+
+      this.turning = true;
+    } else {
+      this.direction = newDirection;
+      this.turning = false;
+    }
+  }
 };
 
 /*
