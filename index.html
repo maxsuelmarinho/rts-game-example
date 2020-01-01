@@ -19,12 +19,11 @@
         <script src="js/aircraft.js" type="text/javascript" charset="utf-8"></script>
         <script src="js/terrain.js" type="text/javascript" charset="utf-8"></script>
         
-        <!-- A* implementation by Andrea Giammarchi -->
+        <!-- A* Implementation by Andrea Giammarchi -->
         <script src="js/astar.js" type="text/javascript" charset="utf-8"></script>
-        <!--        
-        <script src="js/maps.js" type="text/javascript" charset="utf-8"></script>        
+        
         <script src="js/sidebar.js" type="text/javascript" charset="utf-8"></script>
-        -->
+
         <link rel="stylesheet" href="styles.css" type="text/css" media="screen" charset="utf-8">
     </head>
     <body>
@@ -50,44 +49,30 @@
                     <div id="gamemessages"></div>
                     <div id="callerpicture"></div>
                     <div id="cash"></div>
-                    <div id="sidebarbuttons"></div>
+                    <div id="sidebarbuttons">
+                        <input type="button" id="starport" title="Starport">
+                        <input type="button" id="ground-turret" title="Turret">
+                        <input type="button" id="harvester" title="Harvester">
+                        <input type="button" id="scout-tank" title="Scout Tank">
+                        <input type="button" id="heavy-tank" title="Heavy Tank">
+                        <input type="button" id="chopper" title="Copter">
+                        <input type="button" id="wraith" title="Wraith">
+                    </div>
                     <canvas id="gamebackgroundcanvas"></canvas>
                     <canvas id="gameforegroundcanvas"></canvas>
+                </div>
+
+                <div id="messageboxscreen" class="gamelayer">
+                    <div id="messagebox">
+                        <span id="messageboxtext"></span>
+                        <input type="button" id="messageboxok" onclick="game.messageBoxOK();">
+                        <input type="button" id="messageboxcancel" onclick="game.messageBoxCancel();">
+                    </div>
                 </div>
 
                 <div id="loadingscreen" class="gamelayer">
                     <div id="loadingmessage"></div>
                 </div>
-
-                <!--
-                <div id="missionscreen" class="gamelayer">
-                    <input type="button" id="entermission" onclick="singleplayer.play();">
-                    <input type="button" id="exitmission" onclick="singleplayer.exit();">
-                    <div id="missionbriefing"></div>
-                </div>
-
-                <div id="gameinterfacescreen" class="gamelayer">
-                    <div id="gamemessages"></div>
-                    <div id="callerpicture"></div>
-                    <div id="cash"></div>
-                    <div id="sidebarbuttons">
-                        <input type="button" id="starportbutton" title="Starport">
-                        <input type="button" id="turretbutton" title="Turret">
-                        <input type="button" id="placeholder1" disabled>
-
-                        <input type="button" id="scouttankbutton" title="Scout Tank">
-                        <input type="button" id="heavytankbutton" title="Heavy Tank">
-                        <input type="button" id="harvesterbutton" title="Harvester">
-
-                        <input type="button" id="chopperbutton" title="Chopper">
-                        <input type="button" id="wraithbutton" title="Wraith">
-                        <input type="button" id="placeholder2" disabled>
-                    </div>
-                    <canvas id="gamebackgroundcanvas" width="480" height="400"></canvas>
-                    <canvas id="gameforegroundcanvas" width="480" height="400"></canvas>
-                </div>
-                
-                -->
             </div>
         </div>
     </body>

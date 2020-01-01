@@ -46,8 +46,6 @@ var aircraft = {
     type: "aircraft",
     directions: 8,
     canMove: true,
-    // how slow should unit move while turning
-    speedAdjustmentWhileTurningFactor: 0.4,
 
     processActions: function() {
       let direction = Math.round(this.direction) % this.directions;
@@ -63,6 +61,30 @@ var aircraft = {
           }
 
           break;
+
+        case "teleport":
+          this.imageList = this.spriteArray["stand-" + direction];
+          this.imageOffset = this.imageList.offset + this.animationIndex;
+          this.animationIndex++;
+
+          if (this.animationIndex >= this.imageList.count) {
+            this.animationIndex = 0;
+          }
+
+          // Initialize the brightness variable when unit is first teleported
+          if (this.brightness === undefined) {
+            this.brightness = 0.6;
+          }
+
+          this.brightness -= 0.05;
+
+          // Once brightness gets to zero, clear brightness and just stand normally
+          if (this.brightness <= 0) {
+            this.brightness = undefined;
+            this.action = "stand";
+          }
+
+          break;
       }
     },
 
@@ -72,10 +94,10 @@ var aircraft = {
 
       let colorIndex = this.team === "blue" ? 0 : 1;
       let colorOffset = colorIndex * this.pixelHeight;
-      // the aircraft shadow is on the third row of the sprite sheet
+      // The aircraft shadow is on the third row of the sprite sheet
       let shadowOffset = this.pixelHeight * 2;
 
-      // draw the aircraft pixelShadowHeight pixels above its position
+      // Draw the aircraft pixelShadowHeight pixels above its position
       game.foregroundContext.drawImage(
         this.spriteSheet,
         this.imageOffset * this.pixelWidth,
@@ -88,7 +110,7 @@ var aircraft = {
         this.pixelHeight
       );
 
-      // draw the shadow at aircraft position
+      // Draw the shadow at aircraft position
       game.foregroundContext.drawImage(
         this.spriteSheet,
         this.imageOffset * this.pixelWidth,
@@ -134,13 +156,13 @@ var aircraft = {
       game.foregroundContext.fillStyle = this.selectionFillColor;
       game.foregroundContext.lineWidth = 2;
 
-      // draw a filled circle around the aircraft
+      // Draw a filled circle around the aircraft
       game.foregroundContext.beginPath();
       game.foregroundContext.arc(x, y, this.radius, 0, Math.PI * 2, false);
       game.foregroundContext.stroke();
       game.foregroundContext.fill();
 
-      // draw a circle around the aircraft shadow
+      // Draw a circle around the aircraft shadow
       game.foregroundContext.beginPath();
       game.foregroundContext.arc(
         x,
@@ -152,7 +174,7 @@ var aircraft = {
       );
       game.foregroundContext.stroke();
 
-      // join the center of the two circles with a line
+      // Join the center of the two circles with a line
       game.foregroundContext.beginPath();
       game.foregroundContext.moveTo(x, y);
       game.foregroundContext.lineTo(x, y + this.pixelShadowHeight);
@@ -166,18 +188,17 @@ var aircraft = {
       if (this.orders.to) {
         var distanceFromDestinationSquared =
           Math.pow(this.orders.to.x - this.x, 2) +
-          Math.pow(this.orders.to.y - this.y, 2);
+          Math.pow(this.orders.to.y - this.y, 2); // x² + y²
         var distanceFromDestination = Math.pow(
           distanceFromDestinationSquared,
           0.5
-        );
+        ); // (x² + y²)^0.5
         var radius = this.radius / game.gridSize;
       }
 
       switch (this.orders.type) {
         case "move":
-          // move towards destination until distance from destination
-          // is less than aircraft radius
+          // Move toward destination until distance from destination is less than aircraft radius
           if (distanceFromDestination < radius) {
             this.orders = { type: "stand" };
           } else {
@@ -188,21 +209,24 @@ var aircraft = {
       }
     },
 
+    // How slow should unit move while turning
+    speedAdjustmentWhileTurningFactor: 0.4,
+
     moveTo: function(destination, distanceFromDestination) {
-      // find out where we need to turn to get to destination
+      // Find out where we need to turn to get to destination
       let newDirection = this.findAngle(destination);
 
-      // turn toward new direction if necessary
+      // Turn towards new direction if necessary
       this.turnTo(newDirection);
 
-      // calculate maximum distance that aircraft can move per animation cycle
+      // Calculate maximum distance that aircraft can move per animation cycle
       let maximumMovement =
         this.speed *
         this.speedAdjustmentFactor *
         (this.turning ? this.speedAdjustmentWhileTurningFactor : 1);
       let movement = Math.min(maximumMovement, distanceFromDestination);
 
-      // calculate x and y components of the movement
+      // Calculate x and y components of the movement
       let angleRadians = -(this.direction / this.directions) * 2 * Math.PI;
 
       this.lastMovementX = -(movement * Math.sin(angleRadians));
@@ -211,79 +235,8 @@ var aircraft = {
       this.x = this.x + this.lastMovementX;
       this.y = this.y + this.lastMovementY;
     }
-
-    /*
-        animationIndex: 0,
-        direction: 0,        
-        action: "fly",
-        selected: false,
-        selectable: true,
-        orders: { type: "float" },
-
-        animate: function() {
-            if (this.life > this.hitPoints * 0.4) {
-                this.lifeCode = "healthy";
-            } else if (this.life <= 0) {
-                this.lifeCode = "dead";
-                game.remove(this);
-                return;
-            } else {
-                this.lifeCode = "damaged";
-            }
-
-            switch (this.action) {
-                case "fly":
-                    var direction = wrapDirection(Math.round(this.direction), this.directions);
-                    this.imageList = this.spriteArray["fly-" + direction];
-                    this.imageOffset = this.imageList.offset + this.animationIndex;
-                    this.animationIndex++;
-                    if (this.animationIndex >= this.imageList.count) {
-                        this.animationIndex = 0;
-                    }
-                    break;
-            }
-        },
-
-        draw: function() {
-            var interpolationX = this.lastMovementX * game.drawingInterpolationFactor * game.gridSize;
-            var interpolationY = this.lastMovementY * game.drawingInterpolationFactor * game.gridSize;
-            var x = (this.x * game.gridSize) - game.offsetX - this.pixelOffsetX + interpolationX;
-            var y = (this.y * game.gridSize) - game.offsetY - this.pixelOffsetY - this.pixelShadowHeight + interpolationY;
-
-            this.drawingX = x;
-            this.drawingY = y;
-
-            if (this.selected) {
-                this.drawSelection();
-                this.drawLifeBar();
-            }
-
-            var colorIndex = (this.team == "blue") ? 0 : 1;
-            var colorOffset = colorIndex * this.pixelHeight;
-            var shadowOffset = this.pixelHeight * 2;
-
-            game.foregroundContext.drawImage(
-                this.spriteSheet,
-                this.imageOffset * this.pixelWidth,
-                colorOffset,
-                this.pixelWidth, this.pixelHeight,
-                x, y,
-                this.pixelWidth, this.pixelHeight
-            );
-
-            game.foregroundContext.drawImage(
-                this.spriteSheet,
-                this.imageOffset * this.pixelWidth,
-                shadowOffset,
-                this.pixelWidth, this.pixelHeight,
-                x, y + this.pixelShadowHeight,
-                this.pixelWidth, this.pixelHeight
-            );
-        },        
-        */
   },
 
   load: loadItem,
-
   add: addItem
 };

@@ -88,10 +88,34 @@ var vehicles = {
           }
 
           break;
+
+        case "teleport":
+          this.imageList = this.spriteArray["stand-" + direction];
+          this.imageOffset = this.imageList.offset + this.animationIndex;
+          this.animationIndex++;
+
+          if (this.animationIndex >= this.imageList.count) {
+            this.animationIndex = 0;
+          }
+
+          // Initialize the brightness variable when unit is first teleported
+          if (this.brightness === undefined) {
+            this.brightness = 0.6;
+          }
+
+          this.brightness -= 0.05;
+
+          // Once brightness gets to zero, clear brightness and just stand normally
+          if (this.brightness <= 0) {
+            this.brightness = undefined;
+            this.action = "stand";
+          }
+
+          break;
       }
     },
 
-    // default function for drawing a vehicle
+    // Default function for drawing a vehicle
     drawSprite: function() {
       let x = this.drawingX;
       let y = this.drawingY;
@@ -139,6 +163,38 @@ var vehicles = {
       );
     },
 
+    drawPath: function() {
+      // draw A* path
+      if (this.orders.path) {
+        for (let i = 0; i < this.orders.path.length; i++) {
+          let x =
+            this.orders.path[i][0] * game.gridSize -
+            game.offsetX +
+            game.gridSize / 2;
+          let y =
+            this.orders.path[i][1] * game.gridSize -
+            game.offsetY +
+            game.gridSize / 2;
+          game.foregroundContext.strokeStyle = this.selectionBorderColor;
+          game.foregroundContext.lineWidth = 1;
+
+          // draw a filled circle around the vehicle
+          game.foregroundContext.beginPath();
+          game.foregroundContext.arc(
+            x,
+            y,
+            game.gridSize / 2,
+            0,
+            Math.PI * 2,
+            false
+          );
+          game.foregroundContext.fillStyle = this.selectionFillColor;
+          game.foregroundContext.fill();
+          game.foregroundContext.stroke();
+        }
+      }
+    },
+
     drawSelection: function() {
       let x = this.drawingX + this.pixelOffsetX;
       let y = this.drawingY + this.pixelOffsetY;
@@ -146,7 +202,7 @@ var vehicles = {
       game.foregroundContext.strokeStyle = this.selectionBorderColor;
       game.foregroundContext.lineWidth = 1;
 
-      // draw a filled circle around the vehicle
+      // Draw a filled circle around the vehicle
       game.foregroundContext.beginPath();
       game.foregroundContext.arc(x, y, this.radius, 0, Math.PI * 2, false);
       game.foregroundContext.fillStyle = this.selectionFillColor;
@@ -169,23 +225,24 @@ var vehicles = {
 
       switch (this.orders.type) {
         case "move":
-          // move toward destination until distance from destination is less than vehicle radius
+          // Move toward destination until distance from destination is less than vehicle radius
           if (distanceFromDestination < radius) {
             // stop when within on vehicle radius of destination
             this.orders = { type: "stand" };
           } else if (this.colliding && distanceFromDestination < 3 * radius) {
+            // Stop when within 3 radius of the destination if colliding with something
             this.orders = { type: "stand" };
             break;
           } else {
             if (this.colliding && distanceFromDestination < 5 * radius) {
-              // count collisions within 5 radius distance of goal
+              // Count collisions within 5 radius distance of goal
               if (!this.orders.collisionCount) {
                 this.orders.collisionCount = 1;
               } else {
                 this.orders.collisionCount++;
               }
 
-              // stop if more than 30 collisions occur
+              // Stop if more than 30 collisions occur
               if (this.orders.collisionCount > 30) {
                 this.orders = { type: "stand" };
                 break;
@@ -194,7 +251,7 @@ var vehicles = {
 
             let moving = this.moveTo(this.orders.to, distanceFromDestination);
 
-            // Pathfinding couldn't find a path, so stop
+            // Pathfinding couldn't find a path so stop
             if (!moving) {
               this.orders = { type: "stand" };
               break;
@@ -204,7 +261,7 @@ var vehicles = {
           break;
 
         case "deploy":
-          // if oil field has been used already, then cancel order
+          // If oil field has been used already, then cancel order
           if (this.orders.to.lifeCode === "dead") {
             this.orders = { type: "stand" };
 
@@ -212,18 +269,18 @@ var vehicles = {
           }
 
           if (distanceFromDestination < radius + 1) {
-            // after reaching within 1 square of oil field, turn harvester to point toward left (direction 6)
+            // After reaching within 1 square of oil field, turn harvester to point towards left (direction 6)
             this.turnTo(6);
 
             if (!this.turning) {
-              // if oil field has been used already, then cancel order
+              // If oil field has been used already, then cancel order
               if (this.orders.to.lifeCode === "dead") {
                 this.orders = { type: "stand" };
 
                 return;
               }
 
-              // once it is pointing to the left, remove the harvester and oil field and deploy a harvester building
+              // Once it is pointing to the left, remove the harvester and oil field and deploy a harvester building
               game.remove(this.orders.to);
               this.orders.to.lifeCode = "dead";
 
@@ -242,7 +299,7 @@ var vehicles = {
           } else {
             let moving = this.moveTo(this.orders.to, distanceFromDestination);
 
-            // pathfinding couldn't find a path so stop
+            // Pathfinding couldn't find a path so stop
             if (!moving) {
               this.orders = { type: "stand" };
             }
@@ -252,14 +309,14 @@ var vehicles = {
       }
     },
 
-    // how slow should unit move while turning
+    // How slow should unit move while turning
     speedAdjustmentWhileTurningFactor: 0.5,
 
     moveTo: function(destination, distanceFromDestination) {
       let start = [Math.floor(this.x), Math.floor(this.y)];
       let end = [Math.floor(destination.x), Math.floor(destination.y)];
 
-      // direction that we will need to turn to reach destination
+      // Direction that we will need to turn to reach destination
       let newDirection;
 
       let vehicleOutsideMapBounds =
@@ -270,13 +327,13 @@ var vehicles = {
       let vehicleReachedDestinationTile =
         start[0] === end[0] && start[1] === end[1];
 
-      // rebuild the passable grid if needed
+      // Rebuild the passable grid if needed
       if (!game.currentMapPassableGrid) {
         game.rebuildPassableGrid();
       }
 
       if (vehicleOutsideMapBounds || vehicleReachedDestinationTile) {
-        // don't use A*. Just turn toward destination.
+        // Don't use A*. Just turn towards destination.
         newDirection = this.findAngle(destination);
 
         this.orders.path = [
@@ -284,27 +341,27 @@ var vehicles = {
           [destination.x, destination.y]
         ];
       } else {
-        // use A* to try and find a path to the destination
+        // Use A* to try and find a path to the destination
         let grid;
 
         if (
           destination.type === "buildings" ||
           destination.type === "terrain"
         ) {
-          // in case of buildings or terrain, modify the grid slightly so algorithm can find a path
-          // first copy the passable grid
+          // In case of buildings or terrain, modify the grid slightly so algorithm can find a path
+          // First copy the passable grid
           grid = game.makeArrayCopy(game.currentMapPassableGrid);
-          // then modify the destination to be "passable"
+          // Then modify the destination to be "passable"
           grid[Math.floor(destination.y)][Math.floor(destination.x)] = 0;
         } else {
-          // in all other cases just use the passable grid
+          // In all other cases just use the passable grid
           grid = game.currentMapPassableGrid;
         }
 
         this.orders.path = AStar(grid, start, end, "Euclidean");
 
         if (this.orders.path.length > 1) {
-          // the next step is the center of the next path item
+          // The next step is the center of the next path item
           let nextStep = {
             x: this.orders.path[1][0] + 0.5,
             y: this.orders.path[1][1] + 0.5
@@ -312,39 +369,39 @@ var vehicles = {
 
           newDirection = this.findAngle(nextStep);
         } else {
-          // let the callinig function know that there is no path
+          // Let the calling function know that there is no path
           return false;
         }
       }
 
       // Steering Behaviors for Autonomous Characters:
       // http://www.red3d.com/cwr/steer/
-      // collision handling and steering
+      // Collision handling and steering
       let collisionObjects = this.checkForCollisions(
         game.currentMapPassableGrid
       );
 
-      // moving along the present path will cause a collision
+      // Moving along the present path will cause a collision
       if (this.colliding) {
         newDirection = this.steerAwayFromCollisions(collisionObjects);
       }
 
-      // turn toward new direction if necessary
+      // Turn towards new direction if necessary
       this.turnTo(newDirection);
 
-      // calculate maximum distance that vehicle can move per animation cycle
+      // Calculate maximum distance that vehicle can move per animation cycle
       let maximumMovement =
         this.speed *
         this.speedAdjustmentFactor *
         (this.turning ? this.speedAdjustmentWhileTurningFactor : 1);
       let movement = Math.min(maximumMovement, distanceFromDestination);
 
-      // don't move if we are in a hard collision
+      // Don't move forward if we are in a hard collision
       if (this.hardCollision) {
-        movement = 0;
+        movement = -movement * 0.5;
       }
 
-      // calculate x and y components of the movement
+      // Calculate x and y components of the movement
       let angleRadians = -(this.direction / this.directions) * 2 * Math.PI;
 
       this.lastMovementX = -(movement * Math.sin(angleRadians));
@@ -353,13 +410,13 @@ var vehicles = {
       this.x = this.x + this.lastMovementX;
       this.y = this.y + this.lastMovementY;
 
-      // let the calling function know that we were able to move
+      // Let the calling function know that we were able to move
       return true;
     },
 
-    // make a list of collisions that the vehicle will have if it goes along present path
+    // Make a list of collisions that the vehicle will have if it goes along present path
     checkForCollisions: function(grid) {
-      // calculate new position on present path at maximum speed
+      // Calculate new position on present path at maximum speed
       let movement = this.speed * this.speedAdjustmentFactor;
       let angleRadians = -(this.direction / this.directions) * 2 * Math.PI;
       let newX = this.x - movement * Math.sin(angleRadians);
@@ -368,10 +425,10 @@ var vehicles = {
       this.colliding = false;
       this.hardCollision = false;
 
-      // list of objects that will collide after next movement step
+      // List of objects that will collide after next movement step
       let collisionObjects = [];
 
-      // test for collition with grid up to 3 squares away from this vehicle
+      // Test for collision with grid upto 3 squares away from this vehicle
       let x1 = Math.max(0, Math.floor(newX) - 3);
       let x2 = Math.min(game.currentMap.mapGridWidth - 1, Math.floor(newX) + 3);
       let y1 = Math.max(0, Math.floor(newY) - 3);
@@ -392,12 +449,13 @@ var vehicles = {
       for (let j = x1; j <= x2; j++) {
         for (let i = y1; i <= y2; i++) {
           if (grid[i][j] === 1) {
-            // grid square is obstructed
+            // Grid square is obstructed
+
             let distanceSquared =
               Math.pow(j + 0.5 - newX, 2) + Math.pow(i + 0.5 - newY, 2);
 
             if (distanceSquared < gridHardCollisionThreshold) {
-              // distance of obstruted grid from vehicle is less than hard collision threshold
+              // Distance of obstructed grid from vehicle is less than hard collision threshold
               collisionObjects.push({
                 collisionType: "hard",
                 with: { type: "wall", x: j + 0.5, y: i + 0.5 }
@@ -406,7 +464,7 @@ var vehicles = {
               this.colliding = true;
               this.hardCollision = true;
             } else if (distanceSquared < gridSoftCollisionThreshold) {
-              // distance of obstructed grid from vehicle is less than soft collision threshold
+              // Distance of obstructed grid from vehicle is less than soft collision threshold
               collisionObjects.push({
                 collisionType: "soft",
                 with: { type: "wall", x: j + 0.5, y: i + 0.5 }
@@ -421,7 +479,7 @@ var vehicles = {
       for (let i = game.vehicles.length - 1; i >= 0; i--) {
         let vehicle = game.vehicles[i];
 
-        // test vehicles that are less then 3 squares away for collisions
+        // Test vehicles that are less than 3 squares away for collisions
         if (
           vehicle !== this &&
           Math.abs(vehicle.x - this.x) < 3 &&
@@ -433,7 +491,7 @@ var vehicles = {
             distanceSquared <
             Math.pow((this.radius + vehicle.radius) / game.gridSize, 2)
           ) {
-            // distance between vehicles is less than hard collision threshold (sum of vehicles radius)
+            // Distance between vehicles is less than hard collision threshold (sum of vehicle radius)
             collisionObjects.push({ collisionType: "hard", with: vehicle });
 
             this.colliding = true;
@@ -442,7 +500,7 @@ var vehicles = {
             distanceSquared <
             Math.pow((this.radius * 1.5 + vehicle.radius) / game.gridSize, 2)
           ) {
-            // distance between vehicles is less than soft collision threshold (1.5 times vehicle radius + colliding vehicle radius)
+            // Distance between vehicles is less than soft collision threshold (1.5 times vehicle radius + colliding vehicle radius)
             collisionObjects.push({ collisionType: "soft", with: vehicle });
 
             this.colliding = true;
@@ -453,12 +511,12 @@ var vehicles = {
       return collisionObjects;
     },
 
-    // find a direction that steers away from the collision objects
+    // Find a direction that steers away from the collision objects
     steerAwayFromCollisions: function(collisionObjects) {
-      // create a force vector object that adds up repulsion from all colliding objects
+      // Create a force vector object that adds up repulsion from all colliding objects
       let forceVector = { x: 0, y: 0 };
 
-      // by default, the next step has a mild attraction force
+      // By default, the next step has a mild attraction force
       collisionObjects.push({
         collisionType: "attraction",
         with: {
@@ -489,7 +547,7 @@ var vehicles = {
         forceVector.y += forceMagnitude * Math.cos(objectAngleRadians);
       }
 
-      // find a new direction based on the force vector
+      // Find a new direction based on the force vector
       let newDirection =
         this.directions / 2 -
         (Math.atan2(forceVector.x, forceVector.y) * this.directions) /

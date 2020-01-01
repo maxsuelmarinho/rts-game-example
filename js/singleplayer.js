@@ -18,6 +18,7 @@ var singleplayer = {
 
     // don't allow player to enter mission until all assets for the level are loaded
     var enterMissionButton = document.getElementById("entermission");
+
     enterMissionButton.disabled = true;
 
     // load all the items for the level
@@ -70,67 +71,25 @@ var singleplayer = {
   },
 
   sendCommand: function(uids, details) {
+    // we could save commands to replay saved games
     game.processCommand(uids, details);
   },
 
-  startCurrentLevel: function() {
-    var level = maps.singleplayer[singleplayer.currentLevel];
+  endLevel: function(success) {
+    clearInterval(game.animationInterval);
+    game.end();
 
-    $("#entermission").attr("disabled", true);
+    if (success) {
+      let moreLevels =
+        singleplayer.currentLevel < levels.singleplayer.length - 1;
 
-    game.currentMapImage = loader.loadImage(level.mapImage);
-    game.currentLevel = level;
-
-    game.offsetX = level.startX * game.gridSize;
-    game.offsetY = level.startY * game.gridSize;
-
-    // load level requirements
-    game.resetArrays();
-    for (var type in level.requirements) {
-      var requirementArray = level.requirements[type];
-      for (var i = 0; i < requirementArray.length; i++) {
-        var name = requirementArray[i];
-        if (window[type]) {
-          window[type].load(name);
-        } else {
-          console.log("Could not load type:", type);
-        }
+      if (moreLevels) {
+        // message
+      } else {
+        // message
       }
-    }
-
-    for (var i = level.items.length - 1; i >= 0; i--) {
-      var itemDetails = level.items[i];
-      game.add(itemDetails);
-    }
-
-    // create a grid that stores all obstructed tiles as 1 and unobstructed as 0
-    game.currentMapTerrainGrid = [];
-    for (var y = 0; y < level.mapGridHeight; y++) {
-      game.currentMapTerrainGrid[y] = [];
-      for (var x = 0; x < level.mapGridWidth; x++) {
-        game.currentMapTerrainGrid[y][x] = 0;
-      }
-    }
-
-    for (var i = level.mapObstructedTerrain.length - 1; i >= 0; i--) {
-      var obstruction = level.mapObstructedTerrain[i];
-      game.currentMapTerrainGrid[obstruction[1]][obstruction[0]] = 1;
-    }
-    game.currentMapPassableGrid = undefined;
-
-    // load starting cash for game
-    console.log("cash", level.cash);
-    game.cash = $.extend([], level.cash);
-
-    if (loader.loaded) {
-      $("#entermission").removeAttr("disabled");
     } else {
-      loader.onload = function() {
-        $("#entermission").removeAttr("disabled");
-      };
+      // message
     }
-
-    $("#missionbriefing").html(level.briefing.replace(/\n/g, "<br>"));
-    $("#missionscreen").show();
   }
 };

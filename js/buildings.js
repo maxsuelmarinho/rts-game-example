@@ -1,43 +1,72 @@
 var buildings = {
   list: {
     base: {
-      name: "base",
-      // properties for drawing the object
-      // dimensions of the individual sprite
+      name: "base", // used to construct buildings
+      // Properties for drawing the object
+
+      // Dimensions of the individual sprite
       pixelWidth: 60,
       pixelHeight: 60,
-      // dimensions of the base area
+
+      // Dimensions of the base area
       baseWidth: 40,
       baseHeight: 40,
-      // offset of the base area from the top-left corner of the sprite
+
+      // Offset of the base area from the top left corner of the sprite
       pixelOffsetX: 0,
       pixelOffsetY: 20,
 
-      // grid squares necessary for constructing the building
+      // Grid squares necessary for constructing the building
       buildableGrid: [
         [1, 1],
         [1, 1]
       ],
 
-      // grid squares that are passable or obstructured for pathfinding
+      // Grid squares that are passable or obstructed for pathfinding
       passableGrid: [
         [1, 1],
         [1, 1]
       ],
-      // how far the building can "see" through fog of war
+
+      // How far the building can "see" through fog of war
       sight: 3,
-      // maximum possible life
+
+      // Maximum possible life
       hitPoints: 500,
+
       cost: 5000,
+
       spriteImages: [
         { name: "healthy", count: 4 },
         { name: "damaged", count: 1 },
         { name: "constructing", count: 3 }
-      ]
+      ],
+
+      processOrders: function() {
+        switch (this.orders.type) {
+          case "construct-building":
+            this.action = "construct";
+            this.animationIndex = 0;
+
+            // Teleport in building and subtract the cost from player cash
+            var itemDetails = this.orders.details;
+
+            itemDetails.team = this.team;
+            itemDetails.action = "teleport";
+
+            var item = game.add(itemDetails);
+
+            game.cash[this.team] -= item.cost;
+
+            this.orders = { type: "stand" };
+
+            break;
+        }
+      }
     },
 
     starport: {
-      name: "starport",
+      name: "starport", // used to construct vehicles and aircrafts
       pixelWidth: 40,
       pixelHeight: 60,
       baseWidth: 40,
@@ -63,59 +92,84 @@ var buildings = {
         { name: "closing", count: 18 },
         { name: "healthy", count: 4 },
         { name: "damaged", count: 1 }
-      ]
+      ],
 
-      /*
-            processOrders: function() {
-                switch (this.orders.type) {
-                    case "construct-unit":
-                        if (this.lifeCode != "healthy") {
-                            return;
-                        }
+      isUnitOnTop: function() {
+        let unitOnTop = false;
 
-                        // first make sure there is no unit standing on top of the building
-                        var unitOnTop = false;
-                        for (var i = game.items.length - 1; i >= 0; i--) {
-                            var item = game.items[i];
-                            if (item.type == "vehicles" || item.type == "aircraft") {
-                                if (item.x > this.x && item.x < this.x + 2 &&
-                                    item.y > this.y && item.y < this.y + 3) {
+        for (let i = game.items.length - 1; i >= 0; i--) {
+          let item = game.items[i];
 
-                                    unitOnTop = true;
-                                    break;
-                                }
-                            }
-                        }
+          if (item.type === "vehicles" || item.type === "aircraft") {
+            if (
+              item.x > this.x &&
+              item.x < this.x + 2 &&
+              item.y > this.y &&
+              item.y < this.y + 3
+            ) {
+              unitOnTop = true;
+              break;
+            }
+          }
+        }
 
-                        var cost = window[this.orders.details.type].list[this.orders.details.name].cost;
-                        if (unitOnTop) {
-                            if (this.team == game.team) {
-                                game.showMessage("system", "Warning! Cannot teleport unit while landing bay is occupied.");
-                            }
-                        } else if (game.cash[this.team] < cost) {
-                            if (this.team == game.team) {
-                                game.showMessage("system", "Warning! Insufficient Funds. Need " + cost + " credits.");
-                            }
-                        } else {
-                            this.action = "open";
-                            this.animationIndex = 0;
-                            // position new unit above center of starport
-                            var itemDetails = this.orders.details;
-                            itemDetails.x = this.x + 0.5 * this.pixelWidth / game.gridSize;
-                            itemDetails.y = this.y + 0.5 * this.pixelHeight / game.gridSize;
+        return unitOnTop;
+      },
 
-                            // teleport in unit and subtract the cost from player cash
-                            itemDetails.action = "teleport";
-                            itemDetails.team = this.team;
-                            game.cash[this.team] -= cost;
-                            this.constructUnit = $.extend(true, [], itemDetails);
-                        }
+      processOrders: function() {
+        switch (this.orders.type) {
+          case "construct-unit":
+            if (this.lifeCode !== "healthy") {
+              // If the building isn't healthy, ignore the order
+              this.orders = { type: "stand" };
+              break;
+            }
 
-                        this.orders = { type: "stand" };
-                        break;
-                }
-            },
-            */
+            var unitOnTop = this.isUnitOnTop();
+            var cost =
+              window[this.orders.details.type].list[this.orders.details.name]
+                .cost;
+            var cash = game.cash[this.team];
+
+            if (unitOnTop) {
+              // Check whether there is a unit standing on top of the building
+              if (this.team === game.team) {
+                game.showMessage(
+                  "system",
+                  "Warning! Cannot teleport unit while landing bay is occupied."
+                );
+              }
+            } else if (cash < cost) {
+              // Check whether player has insufficient cash
+              if (this.team === game.team) {
+                game.showMessage(
+                  "system",
+                  "Warning! Insufficient Funds. Need " + cost + " credits."
+                );
+              }
+            } else {
+              this.action = "open";
+              this.animationIndex = 0;
+
+              let itemDetails = Object.assign({}, this.orders.details);
+
+              // Position new unit above center of starport
+              itemDetails.x = this.x + (0.5 * this.pixelWidth) / game.gridSize;
+              itemDetails.y = this.y + (0.5 * this.pixelHeight) / game.gridSize;
+
+              // Subtract the cost from player cash
+              game.cash[this.team] -= cost;
+
+              // Set unit to be teleported in once it is constructed
+              itemDetails.action = "teleport";
+              itemDetails.team = this.team;
+              this.constructUnit = itemDetails;
+            }
+
+            this.orders = { type: "stand" };
+            break;
+        }
+      }
     },
 
     harvester: {
@@ -145,8 +199,8 @@ var buildings = {
       canAttackAir: false,
       weaponType: "cannon-ball",
       action: "stand",
-      direction: 0, // 0: face upward
-      directions: 8, // total of 8 turret directions allowed (0-7)
+      direction: 0, // Face upward (0) by default
+      directions: 8, // Total of 8 turret directions allowed (0-7)
       orders: { type: "guard" },
       pixelWidth: 38,
       pixelHeight: 32,
@@ -175,90 +229,123 @@ var buildings = {
       switch (this.action) {
         case "stand":
           if (this.name === "ground-turret" && this.lifeCode === "healthy") {
-            // for a healthy turret, use direction to choose image list
+            // For a healthy turret, use direction to choose image list
             let direction = Math.round(this.direction) % this.directions;
+
             this.imageList = this.spriteArray[this.lifeCode + "-" + direction];
           } else {
-            // in all other cases, use lifeCode
+            // In all other cases, use lifeCode
             this.imageList = this.spriteArray[this.lifeCode];
           }
 
           this.imageOffset = this.imageList.offset + this.animationIndex;
           this.animationIndex++;
+
           if (this.animationIndex >= this.imageList.count) {
             this.animationIndex = 0;
           }
+
           break;
         case "construct":
           this.imageList = this.spriteArray["constructing"];
           this.imageOffset = this.imageList.offset + this.animationIndex;
           this.animationIndex++;
 
-          // once constructing is complete go back to standing
+          // Once constructing is complete go back to standing
           if (this.animationIndex >= this.imageList.count) {
             this.animationIndex = 0;
             this.action = "stand";
           }
+
           break;
+
         case "teleport":
           this.imageList = this.spriteArray["teleport"];
           this.imageOffset = this.imageList.offset + this.animationIndex;
           this.animationIndex++;
 
-          // once teleporting is complete, move to stand mode
+          // Once teleporting is complete, move to stand mode
           if (this.animationIndex >= this.imageList.count) {
             this.animationIndex = 0;
             this.action = "stand";
           }
+
           break;
+
         case "close":
           this.imageList = this.spriteArray["closing"];
           this.imageOffset = this.imageList.offset + this.animationIndex;
           this.animationIndex++;
 
-          // once closing is complete, go back to standing
+          // Once closing is complete go back to standing
           if (this.animationIndex >= this.imageList.count) {
             this.animationIndex = 0;
             this.action = "stand";
           }
+
           break;
+
         case "open":
           this.imageList = this.spriteArray["closing"];
-          // opening is just the closing sprites running backward
+          // Opening is just the closing sprites running backwards
           this.imageOffset =
             this.imageList.offset + this.imageList.count - this.animationIndex;
           this.animationIndex++;
 
-          // once opening is complete, go back to close
+          // Once opening is complete, go back to close
           if (this.animationIndex >= this.imageList.count) {
             this.animationIndex = 0;
             this.action = "close";
+
+            // If constructUnit has been set, add the new unit to the game
+            if (this.constructUnit) {
+              game.add(this.constructUnit);
+              this.constructUnit = undefined;
+            }
           }
+
           break;
+
         case "deploy":
           this.imageList = this.spriteArray["deploy"];
           this.imageOffset = this.imageList.offset + this.animationIndex;
           this.animationIndex++;
 
-          // once deploying is complete, go to stand
+          // Once deploying is complete, go to harvest
           if (this.animationIndex >= this.imageList.count) {
             this.animationIndex = 0;
-            this.action = "stand";
+            this.action = "harvest";
+          }
+
+          break;
+
+        case "harvest":
+          this.imageList = this.spriteArray[this.lifeCode];
+          this.imageOffset = this.imageList.offset + this.animationIndex;
+          this.animationIndex++;
+
+          if (this.animationIndex >= this.imageList.count) {
+            this.animationIndex = 0;
+            if (this.lifeCode === "healthy") {
+              // Harvesters mine 2 credits of cash per animation cycle
+              game.cash[this.team] += 2;
+            }
           }
 
           break;
       }
     },
 
-    // default function for drawing a building
+    // Default function for drawing a building
     drawSprite: function() {
       let x = this.drawingX;
       let y = this.drawingY;
-      // all sprite sheets will have blue in the first row and green in the second row
+
+      // All sprite sheets will have blue in the first row and green in the second row
       let colorIndex = this.team === "blue" ? 0 : 1;
       let colorOffset = colorIndex * this.pixelHeight;
 
-      // draw the sprite at x, y
+      // Draw the sprite at x, y
       game.foregroundContext.drawImage(
         this.spriteSheet,
         this.imageOffset * this.pixelWidth,
@@ -290,6 +377,7 @@ var buildings = {
 
       game.foregroundContext.strokeStyle = this.lifeBarBorderColor;
       game.foregroundContext.lineWidth = 1;
+
       game.foregroundContext.strokeRect(
         x,
         y,
@@ -306,7 +394,7 @@ var buildings = {
       game.foregroundContext.lineWidth = 1;
       game.foregroundContext.fillStyle = this.selectionFillColor;
 
-      // draw a filled rectangle around the building
+      // Draw a filled rectangle around the building
       game.foregroundContext.fillRect(
         x - 1,
         y - 1,
@@ -320,144 +408,8 @@ var buildings = {
         this.baseHeight + 2
       );
     }
-
-    /*
-        animationIndex: 0,
-        direction: 0,
-        orders: { type: "stand" },
-        action: "stand",
-        selected: false,
-        selectable: true,
-
-        animate: function() {
-            if (this.life > this.hitPoints * 0.4) {
-                this.lifeCode = "healthy";
-            } else if (this.life <= 0) {
-                this.lifeCode = "dead";
-                game.remove(this);
-                return;
-            } else {
-                this.lifeCode = "damaged";
-            }
-
-            switch (this.action) {
-                case "stand":
-                    this.imageList = this.spriteArray[this.lifeCode];
-                    this.imageOffset = this.imageList.offset + this.animationIndex;
-                    this.animationIndex++;
-                    if (this.animationIndex >= this.imageList.count) {
-                        this.animationIndex = 0;
-                    }
-                    break;
-                case "construct":
-                    this.imageList = this.spriteArray["constructing"];
-                    this.imageOffset = this.imageList.offset + this.animationIndex;
-                    this.animationIndex++;
-                    if (this.animationIndex >= this.imageList.count) {
-                        this.animationIndex = 0;
-                        this.action = "stand";
-                    }
-                    break;
-                case "teleport":
-                    this.imageList = this.spriteArray["teleport"];
-                    this.imageOffset = this.imageList.offset + this.animationIndex;
-                    this.animationIndex++;
-                    // once teleporting is complete, move to either guard or stand mode
-                    if (this.animationIndex >= this.imageList.count) {
-                        this.animationIndex = 0;
-                        if (this.canAttack) {
-                            this.action = "guard";
-                        } else {
-                            this.action = "stand";
-                        }
-                    }
-                    break;
-                case "close":
-                    this.imageList = this.spriteArray["closing"];
-                    this.imageOffset = this.imageList.offset + this.animationIndex;
-                    this.animationIndex++;
-                    // onde closing is complete go back to standing
-                    if (this.animationIndex >= this.imageList.count) {
-                        this.animationIndex = 0;
-                        this.action = "stand";
-                    }
-                    break;
-                case "open":
-                    this.imageList = this.spriteArray["closing"];
-                    // opening is just the closing sprites running backwards
-                    this.imageOffset = this.imageList.offset + this.imageList.count - this.animationIndex;
-                    this.animationIndex++;
-                    // once opening is complete, go back to close
-                    if (this.animationIndex >= this.imageList.count) {
-                        this.animationIndex = 0;
-                        this.action = "close";
-
-                        // if constructUnit has been set, add the new unit to the game
-                        if (this.constructUnit) {
-                            game.add(this.constructUnit);
-                            this.constructUnit = undefined;
-                        }
-                    }
-                    break;
-                case "deploy":
-                    this.imageList = this.spriteArray["deploy"];
-                    this.imageOffset = this.imageList.offset + this.animationIndex;
-                    this.animationIndex++;
-                    // once deploying is complete, go to harvest now
-                    if (this.animationIndex >= this.imageList.count) {
-                        this.animationIndex = 0;
-                        this.action = "harvest";
-                    }
-                    break;
-                case "guard":
-                    if (this.lifeCode == "damaged") {
-                        this.imageList = this.spriteArray[this.lifeCode];
-                    } else {
-                        this.imageList = this.spriteArray[this.lifeCode + "-" + this.direction];
-                    }
-                    this.imageOffset = this.imageList.offset;
-                    break;
-                case "harvest":
-                    this.imageList = this.spriteArray[this.lifeCode];
-                    this.imageOffset = this.imageList.offset + this.animationIndex;
-                    this.animationIndex++;
-                    if (this.animationIndex >= this.imageList.count) {
-                        this.animationIndex = 0;
-                        if (this.lifeCode == "healthy") {
-                            // harvesters mine 2 credits of cash per animation cycle
-                            game.cash[this.team] += 2;
-                        }
-                    }
-                    break;
-            }
-        },
-
-        draw: function() {
-            var x = (this.x * game.gridSize) - game.offsetX - this.pixelOffsetX;
-            var y = (this.y * game.gridSize) - game.offsetY - this.pixelOffsetY;
-
-            this.drawingX = x;
-            this.drawingY = y;
-
-            if (this.selected) {
-                this.drawSelection();
-                this.drawLifeBar();
-            }
-
-            var colorIndex = (this.team == "blue") ? 0 : 1;
-            var colorOffset = colorIndex * this.pixelHeight;
-            game.foregroundContext.drawImage(
-                this.spriteSheet,
-                this.imageOffset * this.pixelWidth,
-                colorOffset,
-                this.pixelWidth, this.pixelHeight,
-                x, y,
-                this.pixelWidth, this.pixelHeight);
-        },        
-        */
   },
 
   load: loadItem,
-
   add: addItem
 };

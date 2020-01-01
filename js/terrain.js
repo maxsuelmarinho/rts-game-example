@@ -67,6 +67,7 @@ var terrain = {
       let y = this.drawingY;
 
       var colorOffset = 0; // no team based colors for terrain
+
       game.foregroundContext.drawImage(
         this.spriteSheet,
         this.imageOffset * this.pixelWidth,
